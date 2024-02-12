@@ -8,7 +8,7 @@ Detailed information about the requirements, design, and architecture of this se
 1. logsRouter: Accepts the HTTP GET requests for the logs API Endpoints and directs to the logsValidator.
 2. logsValidator: Validates the fileName and numEntries in the input request and directs to the logsController
 2. logsController Ingress: Invokes the fileOperations module for the request.
-3. fileOperations: Reads the stream of log data from the local server for the given criteria and returns to logsController. 
+3. fileOperations: Reads the stream of log data asynchronously from the local server for the given criteria and returns to logsController. 
 3. logsController Egress: Return the data as text/html in the HTTP Response.
 
 ## Installation
