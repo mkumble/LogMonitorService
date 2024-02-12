@@ -13,14 +13,15 @@ Detailed information about the requirements, design, and architecture of this se
 
 ## Installation
 Follow these steps to install the service:
-1. Clone the repo: `git clone git@github.com:mkumble/LogMonitorService.git`
-2. Install dependencies: ```cd LogMonitorService; npm install```
+1. Make sure npm is installed on the host.
+2. Clone the repo: `git clone https://github.com/mkumble/LogMonitorService.git`
+3. Install dependencies: ```cd LogMonitorService; npm install```
 
 ## Configuration
-Modify the default configurations defined in `LogMonitorService/src/api/utils/constants.js` as needed.
+Modify the default configurations defined in `LogMonitorService/src/api/utils/constants.js` as needed (Example: change SERVER_PORT)
 
 ## Running the service
-1. Follow the Installation instructions.
+1. Follow the Installation instructions above.
 2. Open the terminal and navigate to the src directory: `cd LogMonitorService/src`
 3. Start the node.js application: `node app.js`. By default, the server runs on `http://localhost:3000`
 
@@ -58,6 +59,7 @@ Retrieve a log file from local server.
 Filesystem
 
 **Response:**
+
 Happy Path:
 Input | Status | Status Code | Output/Error Message
 ------------ | ------------ | ------------ | ------------
