@@ -1,8 +1,6 @@
 # Log Monitor Service
 This service provides on-demand monitoring of various Unix-based servers without having to log into each individual machine and opening up the log files found in /var/log.
 
-## UI
-
 ## Requirements, Design & Architecture:
 Detailed information about the requirements, design, and architecture of this service can be found here: https://docs.google.com/document/d/13GyRpE5BllY1iMDoQd9ffszhTRFUfHQzeOUxAGgiXe4/edit?usp=sharing
 
@@ -25,6 +23,10 @@ Modify the default configurations defined in `LogMonitorService/src/api/utils/co
 1. Follow the Installation instructions.
 2. Open the terminal and navigate to the src directory: `cd LogMonitorService/src`
 3. Start the node.js application: `node app.js`. By default, the server runs on `http://localhost:3000`
+
+## UI
+After running the service, UI can be accessed on `http://localhost:3000/index.html`
+![Log Monitor UI](./images/LogMonitorUI.png)
 
 ## Running unit tests
 1. Make sure the server is not running on localhost 3000.
