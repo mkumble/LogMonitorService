@@ -18,11 +18,31 @@ Follow these steps to install the service:
 3. Start the node.js application: `node app.js`. By default, the server runs on `http://localhost:3000`
 
 ## APIs
-### Pre-requisite: Please follow the 'Running the service' instructions above.
-### GET APIs:
-#### Get system.log from local server
-##### Curl Request: `curl http://localhost:3000/api/v1/logs`
-##### Response: The contents of system.log will be displayed in reverse (latest events as first) (content type: text/html)
+#### Pre-requisite: Please follow the 'Running the service' instructions above.
+
+### (GET) Log file lookup
+```
+GET /api/v1/logs
+```
+Retrieve a log file from local server.
+
+**Parameters:**
+
+Name | Type | Mandatory | Description
+------------ | ------------ | ------------ | ------------
+fileName | STRING | YES | A valid fileName (in /var/logs) on the local server
+
+**Data Source:**
+Filesystem
+
+**Response:**
+Input | Status | Status Code | Output
+------------ | ------------ | ------------ | ------------ 
+Valid fileName | Success | 200 | Log lines of complete file (latest to old)
+Missing fileName | Error | 400 | File name cannot be empty.
+FileName containing path | Error | 400 | Path not allowed in file name.
+File doesn't exist in /var/log | Error | 500 | An error occurred while reading the log file.
+
 
 ## Running unit tests
 1. Make sure the server is not running on localhost 3000. 
