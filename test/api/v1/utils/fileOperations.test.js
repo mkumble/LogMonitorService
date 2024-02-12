@@ -2,6 +2,7 @@ const chai = require('chai');
 const sinon = require('sinon');
 const fs = require('fs');
 const expect = chai.expect;
+
 const fileOperations = require('../../../../src/api/utils/fileOperations');
 
 describe('readFileInReverse', () => {
@@ -39,3 +40,4 @@ describe('readFileInReverse', () => {
         });
     });
 });
+

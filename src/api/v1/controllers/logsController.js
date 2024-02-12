@@ -1,11 +1,16 @@
 // controller that handles all the log API V1 endpoints
 const httpStatus = require('http-status-codes');
+const path = require('path');
+
 const fileOperations = require('../../utils/fileOperations');
-const constants = require('../../utils/constants');
 const {LOG_FILE_READ_ERROR} = require('../../utils/errorMessages');
+const {LOG_FILES_BASE_PATH} = require("../../utils/constants");
 
 exports.getLocalLogs = (req, res) => {
-    fileOperations.readFileInReverse(constants.LOG_FILE, (err, data) => {
+    const fileName = req.query.fileName;
+    const filePath = path.join(LOG_FILES_BASE_PATH, fileName);
+
+    fileOperations.readFileInReverse(filePath, (err, data) => {
         if (err) {
             return res.status(httpStatus.INTERNAL_SERVER_ERROR).send(LOG_FILE_READ_ERROR);
         }
