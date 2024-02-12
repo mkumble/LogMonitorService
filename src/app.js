@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
-const constants = require('./api/utils/constants');
 
+const constants = require('./api/utils/constants');
 // API versioned routes
 const apiRoutes = require('./api/v1');
 app.use('/api/v1', apiRoutes);

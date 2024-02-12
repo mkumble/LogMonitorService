@@ -1,6 +1,7 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const expect = chai.expect;
+
 const logger = require('../../../../src/api/utils/logger');
 
 describe('log', () => {
@@ -35,3 +36,4 @@ describe('log', () => {
         expect(consoleDebugMock.calledOnce).to.be.true;
     });
 });
+
