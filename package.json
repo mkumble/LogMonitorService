@@ -4,7 +4,7 @@
   "description": "Service to fetch logs from remote servers",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha \"./{,!(node_modules)/**/}*.test.js\""
   },
   "author": "Mithun Kumble <mkumble3@gatech.edu>",
   "license": "ISC",
@@ -31,6 +31,7 @@
   },
   "homepage": "https://github.com/mkumble/LogMonitorService#readme",
   "devDependencies": {
-    "chai": "^4.0.0"
+    "chai": "^4.4.1",
+    "sinon": "^17.0.1"
   }
 }
