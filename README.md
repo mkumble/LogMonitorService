@@ -28,10 +28,10 @@ Retrieve a log file from local server.
 
 **Parameters:**
 
-| Name       | Type   | Mandatory | Description                                         |
-|------------|--------|-----------|-----------------------------------------------------|
-| fileName   | STRING | YES       | A valid fileName (in /var/logs) on the local server |
-| numEntries | NUMBER | NO        | Any number greater than zero                        |
+| Name       | Type   | Mandatory | Description                                          |
+|------------|--------|-----------|------------------------------------------------------|
+| fileName   | STRING | YES       | A valid fileName (in /var/logs) on the local server. |
+| numEntries | NUMBER | NO        | Number of log lines/entries to retrieve.             |
 
 **Data Source:**
 Filesystem
