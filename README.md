@@ -28,9 +28,9 @@ Retrieve a log file from local server.
 
 **Parameters:**
 
-Name | Type | Mandatory | Description
------------- | ------------ | ------------ | ------------
-fileName | STRING | YES | A valid fileName (in /var/logs) on the local server
+| Name     | Type   | Mandatory | Description                                         |
+|----------|--------|-----------|-----------------------------------------------------|
+| fileName | STRING | YES       | A valid fileName (in /var/logs) on the local server |
 
 **Data Source:**
 Filesystem
