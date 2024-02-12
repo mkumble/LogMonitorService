@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Log Monitor UI</title>
+    <link rel="stylesheet" type="text/css" href="./css/styles.css">
+</head>
+<body>
+<h1>Log Monitor UI</h1>
+<form id="logForm">
+    <fieldset>
+        <legend>Log Parameters</legend>
+        <label for="numEntries">Number of entries</label><br>
+        <input type="number" id="numEntries" name="numEntries" min="1" value="10" placeholder="Enter number of entries"><br><br>
+        <label for="keyword">Keyword:</label><br>
+        <input type="text" id="keyword" name="keyword" placeholder="Enter keyword"><br><br>
+        <label for="fileName">File Name:</label><br>
+        <input type="text" id="fileName" name="fileName" placeholder="Enter file name"><br><br>
+    </fieldset>
+
+    <input type="submit" value="Get Logs">
+    <pre id="logs"></pre>
+</form>
+<script src="./js/script.js"></script>
+</body>
+</html>

@@ -24,6 +24,10 @@ Modify the default configurations defined in `LogMonitorService/src/api/utils/co
 2. Open the terminal and navigate to the src directory: `cd LogMonitorService/src`
 3. Start the node.js application: `node app.js`. By default, the server runs on `http://localhost:3000`
 
+## UI
+After running the service, UI can be accessed on `http://localhost:3000/index.html`
+![Log Monitor UI](./images/LogMonitorUI.png)
+
 ## Running unit tests
 1. Make sure the server is not running on localhost 3000.
 2. Run `npm test` to run all the unit tests
