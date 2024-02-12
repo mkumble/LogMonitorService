@@ -4,13 +4,20 @@ This service provides on-demand monitoring of various Unix-based servers without
 ## Requirements, Design & Architecture:
 Detailed information about the requirements, design, and architecture of this service can be found here: https://docs.google.com/document/d/13GyRpE5BllY1iMDoQd9ffszhTRFUfHQzeOUxAGgiXe4/edit?usp=sharing
 
+## Implementation
+1. logsRouter: Accepts the HTTP GET requests for the logs API Endpoints and directs to the logsValidator.
+2. logsValidator: Validates the fileName and numEntries in the input request and directs to the logsController
+2. logsController Ingress: Invokes the fileOperations module for the request.
+3. fileOperations: Reads the stream of log data from the local server for the given criteria and returns to logsController. 
+3. logsController Egress: Return the data as text/html in the HTTP Response.
+
 ## Installation
 Follow these steps to install the service:
 1. Clone the repo: `git clone git@github.com:mkumble/LogMonitorService.git`
 2. Install dependencies: ```cd LogMonitorService; npm install```
 
 ## Configuration
-1. Modify the default configurations defined in `LogMonitorService/src/api/utils/constants.js` as needed.
+Modify the default configurations defined in `LogMonitorService/src/api/utils/constants.js` as needed.
 
 ## Running the service
 1. Follow the Installation instructions.
@@ -20,6 +27,10 @@ Follow these steps to install the service:
 ## Running unit tests
 1. Make sure the server is not running on localhost 3000.
 2. Run `npm test` to run all the unit tests
+
+## Commiting Changes
+1. Commits follow the conventional commit specification https://www.conventionalcommits.org/en/v1.0.0/#specification
+2. API design is based on OpenAPI specification https://swagger.io/specification/
 
 ## APIs
 #### Pre-requisite: Please follow the 'Running the service' instructions above.
