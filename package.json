@@ -12,7 +12,6 @@
     "asap": "^2.0.6",
     "assertion-error": "^1.1.0",
     "asynckit": "^0.4.0",
-    "axios": "^1.6.7",
     "body-parser": "^1.20.1",
     "bytes": "^3.1.2",
     "call-bind": "^1.0.6",
@@ -113,7 +112,6 @@
     "wrappy": "^1.0.2",
     "yallist": "^4.0.0"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "mocha \"./{,!(node_modules)/**/}*.test.js\""
   },
