@@ -11,6 +11,7 @@ describe('readFileInReverse', () => {
 
     beforeEach(() => {
         createReadStreamMock = sinon.stub(fs, 'createReadStream');
+        sinon.stub(fs, 'existsSync').returns(true);
     });
 
     afterEach(() => {

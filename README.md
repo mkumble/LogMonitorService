@@ -47,11 +47,12 @@ Retrieve a log file from local server.
 
 **Parameters:**
 
-| Name       | Type   | Mandatory | Description                                          |
-|------------|--------|-----------|------------------------------------------------------|
-| fileName   | STRING | YES       | A valid fileName (in /var/logs) on the local server. |
-| numEntries | NUMBER | NO        | Number of log lines/entries to retrieve.             |
-| keyword    | STRING | NO        | An encoded string to search in the log file          |
+| Name       | Type   | Mandatory | Description                                                                        |
+|------------|--------|-----------|------------------------------------------------------------------------------------|
+| fileName   | STRING | YES       | A valid fileName (in /var/logs) on the local server.                               |
+| numEntries | NUMBER | NO        | Number of log lines/entries to retrieve.                                           |
+| keyword    | STRING | NO        | An encoded string to search in the log file                                        |
+| serverUrls | STRING | NO        | Comma separated list of server URLs. These servers must be running the application |
 
 **Data Source:**
 Filesystem
@@ -63,6 +64,9 @@ Input | Status | Status Code | Output/Error Message
 Valid fileName | Success | 200 | Complete logs of the file (latest to old).
 Valid fileName, Valid numEntries | Success | 200 | Most Recent 'numEntries' lines of the file.
 Valid fileName, Valid numEntries, Valid (URL encoded) keyword | Success | 200 | Most recent 'numEntries' lines of the file containing the keyword/text.
+Valid fileName, Valid numEntries, Valid (URL encoded) keyword, Valid serverURLs | Success | 200 | Most recent 'numEntries' lines of the file containing the keyword/text for each serverURL
+Valid fileName, Valid numEntries, Valid (URL encoded) keyword, Partially reachable/valid serverURLs | Success | 200 | Combination of success and error messages based on the response for each serverURL.
+
 
 Errors:
 Input | Status | Status Code | Output/Error Message
@@ -72,6 +76,7 @@ FileName containing path | Error | 400 | Path not allowed in file name.
 File doesn't exist in /var/log | Error | 500 | An error occurred while reading the log file.
 numEntries < 1 | Error | 400 | Number of Entries must be greater than 0.
 numEntries is NaN | Error | 400 | Number of Entries query param must be a number.
+All serverURLs are unreachable/invalid | Error | 500 | Server <Server>: Error: An error occurred while reading the log file.
 
 ### Sample Requests/Response
 
@@ -112,3 +117,21 @@ Feb 11 20:41:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread
 Feb 11 20:40:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
 Feb 11 20:39:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
 ```
+
+#### Get last 5 entries containing the keyword from a log file for two serverURLs (one is invalid)
+##### Request
+```text
+curl "http://localhost:3000/api/v1/logs?fileName=system.log&numEntries=5&keyword=Function:%20loadXML&serverUrls=http://localhost:3001,http://localhost:3000"
+```
+##### Response
+```
+Server http://localhost:3001:
+Error: An error occurred while reading the log file.
+
+Server http://localhost:3000:
+Logs:
+Feb 12 01:10:13 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+Feb 12 01:09:13 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+Feb 12 01:08:13 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+Feb 12 01:07:13 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+Feb 12 01:06:12 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config```

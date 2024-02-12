@@ -8,6 +8,6 @@ const logsValidator = require('../validations/logsValidator')
 const logsController = require('../controllers/logsController');
 
 // Route for retreiving local logs
-logsRouter.get('/', logsValidator.validateFileName, logsValidator.validateNumEntries, logsController.getLocalLogs);
+logsRouter.get('/', logsValidator.validateFileName, logsValidator.validateNumEntries, logsController.getLogsFromServers);
 
 module.exports = logsRouter;
