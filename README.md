@@ -17,6 +17,10 @@ Follow these steps to install the service:
 2. Open the terminal and navigate to the src directory: `cd LogMonitorService/src`
 3. Start the node.js application: `node app.js`. By default, the server runs on `http://localhost:3000`
 
+## Running unit tests
+1. Make sure the server is not running on localhost 3000.
+2. Run `npm test` to run all the unit tests
+
 ## APIs
 #### Pre-requisite: Please follow the 'Running the service' instructions above.
 
@@ -32,21 +36,64 @@ Retrieve a log file from local server.
 |------------|--------|-----------|------------------------------------------------------|
 | fileName   | STRING | YES       | A valid fileName (in /var/logs) on the local server. |
 | numEntries | NUMBER | NO        | Number of log lines/entries to retrieve.             |
+| keyword    | STRING | NO        | An encoded string to search in the log file          |
 
 **Data Source:**
 Filesystem
 
 **Response:**
+Happy Path:
 Input | Status | Status Code | Output/Error Message
 ------------ | ------------ | ------------ | ------------
 Valid fileName | Success | 200 | Complete logs of the file (latest to old).
-Valid fileName, Valid numEntries | Success | 200 | 'numEntries' lines of the file (latest to old).
+Valid fileName, Valid numEntries | Success | 200 | Most Recent 'numEntries' lines of the file.
+Valid fileName, Valid numEntries, Valid (URL encoded) keyword | Success | 200 | Most recent 'numEntries' lines of the file containing the keyword/text.
+
+Errors:
+Input | Status | Status Code | Output/Error Message
+------------ | ------------ | ------------ | ------------
 Missing fileName | Error | 400 | File name cannot be empty.
 FileName containing path | Error | 400 | Path not allowed in file name.
 File doesn't exist in /var/log | Error | 500 | An error occurred while reading the log file.
 numEntries < 1 | Error | 400 | Number of Entries must be greater than 0.
 numEntries is NaN | Error | 400 | Number of Entries query param must be a number.
 
-## Running unit tests
-1. Make sure the server is not running on localhost 3000. 
-2. Run `npm test` to run all the unit tests
+### Sample Requests/Response
+
+#### Get all logs from a log file
+##### Request
+```text
+curl "http://localhost:3000/api/v1/logs?fileName=system.log"
+```
+##### Response
+```
+Feb 11 20:38:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+Feb 11 20:37:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+Feb 11 20:36:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+```
+
+#### Get last 3 entries from a log file
+##### Request
+```text
+curl "http://localhost:3000/api/v1/logs?fileName=system.log&numEntries=3"
+```
+##### Response
+```
+Feb 11 20:41:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+Feb 11 20:40:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+Feb 11 20:39:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+```
+
+#### Get last 5 entries containing the keyword from a log file
+##### Request
+```text
+curl "http://localhost:3000/api/v1/logs?fileName=system.log&numEntries=5&keyword=Function:%20loadXML"
+```
+##### Response
+```
+Feb 11 20:43:06 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+Feb 11 20:42:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+Feb 11 20:41:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+Feb 11 20:40:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+Feb 11 20:39:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
+```
