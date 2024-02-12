@@ -9,8 +9,9 @@ const {LOG_FILES_BASE_PATH} = require("../../utils/constants");
 exports.getLocalLogs = (req, res) => {
     const fileName = req.query.fileName;
     const filePath = path.join(LOG_FILES_BASE_PATH, fileName);
+    const numEntries = req.query.numEntries;
 
-    fileOperations.readFileInReverse(filePath, (err, data) => {
+    fileOperations.readFileInReverse(filePath, numEntries, (err, data) => {
         if (err) {
             return res.status(httpStatus.INTERNAL_SERVER_ERROR).send(LOG_FILE_READ_ERROR);
         }

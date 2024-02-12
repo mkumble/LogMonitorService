@@ -28,21 +28,24 @@ Retrieve a log file from local server.
 
 **Parameters:**
 
-| Name     | Type   | Mandatory | Description                                         |
-|----------|--------|-----------|-----------------------------------------------------|
-| fileName | STRING | YES       | A valid fileName (in /var/logs) on the local server |
+| Name       | Type   | Mandatory | Description                                          |
+|------------|--------|-----------|------------------------------------------------------|
+| fileName   | STRING | YES       | A valid fileName (in /var/logs) on the local server. |
+| numEntries | NUMBER | NO        | Number of log lines/entries to retrieve.             |
 
 **Data Source:**
 Filesystem
 
 **Response:**
-Input | Status | Status Code | Output
------------- | ------------ | ------------ | ------------ 
-Valid fileName | Success | 200 | Log lines of complete file (latest to old)
+Input | Status | Status Code | Output/Error Message
+------------ | ------------ | ------------ | ------------
+Valid fileName | Success | 200 | Complete logs of the file (latest to old).
+Valid fileName, Valid numEntries | Success | 200 | 'numEntries' lines of the file (latest to old).
 Missing fileName | Error | 400 | File name cannot be empty.
 FileName containing path | Error | 400 | Path not allowed in file name.
 File doesn't exist in /var/log | Error | 500 | An error occurred while reading the log file.
-
+numEntries < 1 | Error | 400 | Number of Entries must be greater than 0.
+numEntries is NaN | Error | 400 | Number of Entries query param must be a number.
 
 ## Running unit tests
 1. Make sure the server is not running on localhost 3000. 

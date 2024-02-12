@@ -6,38 +6,58 @@ const expect = chai.expect;
 const fileOperations = require('../../../../src/api/utils/fileOperations');
 
 describe('readFileInReverse', () => {
-    //restore stubbing
+    let readFileStub;
+
+    beforeEach(() => {
+        readFileStub = sinon.stub(fs, 'readFile');
+    });
+
+    //restore stubbing after each test case
     afterEach(() => {
         sinon.restore();
     });
 
-    //happy path
-    it('reads a file successfully and call the callback with the reversed file content', (done) => {
-        const mockData = 'line1 \n line2';
-        const mockDateInReverse = mockData.split('\n').reverse().join('\n');
-        sinon.stub(fs, 'readFile').callsFake((filePath, encoding, callback) => {
+    function testReadFileInReverse(mockData, numEntries, done) {
+        const expectedData = mockData.split('\n').filter(Boolean).reverse().slice(0, numEntries).join('\n');
+        readFileStub.callsFake((filePath, encoding, callback) => {
             callback(null, mockData);
         });
 
-        fileOperations.readFileInReverse('filePath', (err, data) => {
+        fileOperations.readFileInReverse('filePath', numEntries, (err, data) => {
             expect(err).to.be.null;
-            expect(data).to.equal(mockDateInReverse);
+            expect(data).to.equal(expectedData);
             done();
         });
+    }
+
+    //happy path
+    it('returns the last n entries when numEntries matches the number of entries in the log file', (done) => {
+        testReadFileInReverse('line1 \n line2 \n line3', 3, done);
     });
 
-    //error scenario
-    it('fails reading the file and calls the callback with an error', (done) => {
+    it('skips the last line if it is empty', (done) => {
+        testReadFileInReverse('line1 \n line2 \n', 1, done);
+    });
+
+    it('returns the last n entries when numEntries is less than the number of entries in the log file', (done) => {
+        testReadFileInReverse('line1 \n line2 \n line3', 2, done);
+    });
+
+    it('returns all entries when numEntries is greater than the number of entries in the log file', (done) => {
+        testReadFileInReverse('line1 \n line2 \n line3', 4, done);
+    });
+
+    //error
+    it('calls the callback with an error if reading the file fails', (done) => {
         const mockError = new Error('error');
-        sinon.stub(fs, 'readFile').callsFake((filePath, encoding, callback) => {
+        readFileStub.callsFake((filePath, encoding, callback) => {
             callback(mockError);
         });
 
-        fileOperations.readFileInReverse('filePath', (err, data) => {
+        fileOperations.readFileInReverse('filePath', 2, (err, data) => {
             expect(err).to.equal(mockError);
             expect(data).to.be.undefined;
             done();
         });
     });
 });
-
