@@ -39,8 +39,8 @@ Filesystem
 **Response:**
 Input | Status | Status Code | Output/Error Message
 ------------ | ------------ | ------------ | ------------
-Valid fileName | Success | 200 | Log lines of complete file (latest to old)
-Valid fileName, Valid numEntries | Success | 200 | Log lines of numEntries (latest to old)
+Valid fileName | Success | 200 | Complete logs of the file (latest to old).
+Valid fileName, Valid numEntries | Success | 200 | 'numEntries' lines of the file (latest to old).
 Missing fileName | Error | 400 | File name cannot be empty.
 FileName containing path | Error | 400 | Path not allowed in file name.
 File doesn't exist in /var/log | Error | 500 | An error occurred while reading the log file.
