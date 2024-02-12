@@ -23,7 +23,7 @@ function validateFileName(fileName) {
     }
     // Validate filename for invalid/malicious paths
     if (fileName.includes('/') || fileName.includes('..')) {
-        alert(PATH_NOT_ALLOWED_IN_FILE_NAME);
+        alert(ERROR_MESSAGES.PATH_NOT_ALLOWED_IN_FILE_NAME);
         return false;
     }
 
@@ -40,12 +40,12 @@ function validateNumEntries(numEntries) {
     numEntries = Number(numEntries);
 
     if (isNaN(numEntries)) {
-        alert(NUM_ENTRIES_MUST_BE_A_NUMBER);
+        alert(ERROR_MESSAGES.NUM_ENTRIES_MUST_BE_A_NUMBER);
         return false;
     }
 
     if (numEntries < 1) {
-        alert(NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO);
+        alert(ERROR_MESSAGES.NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO);
         return false;
     }
 
