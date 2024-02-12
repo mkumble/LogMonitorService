@@ -5,7 +5,7 @@ const constants = require('../../utils/constants');
 const {LOG_FILE_READ_ERROR} = require('../../utils/errorMessages');
 
 exports.getLocalLogs = (req, res) => {
-    fileOperations.readFile(constants.LOG_FILE, (err, data) => {
+    fileOperations.readFileInReverse(constants.LOG_FILE, (err, data) => {
         if (err) {
             return res.status(httpStatus.INTERNAL_SERVER_ERROR).send(LOG_FILE_READ_ERROR);
         }

@@ -2,17 +2,19 @@ const fs = require('fs');
 const logger = require('./logger');
 const constants = require('./constants')
 
-function readFile(filePath, callback) {
+function readFileInReverse(filePath, callback) {
     fs.readFile(filePath, constants.ENCODING, (err, data) => {
         if (err) {
             logger.log(err, 'error');
             callback(err);
         } else {
-            callback(null, data);
+            //split the log events by new line and reverse them
+            let reversedLogContent = data.split('\n').reverse().join('\n');
+            callback(null, reversedLogContent);
         }
     });
 }
 
 module.exports = {
-    readFile: readFile
+    readFileInReverse: readFileInReverse
 };

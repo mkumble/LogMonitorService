@@ -22,7 +22,7 @@ Follow these steps to install the service:
 ### GET APIs:
 #### Get system.log from local server
 ##### Curl Request: `curl http://localhost:3000/api/v1/logs`
-##### Response: text/html
+##### Response: The contents of system.log will be displayed in reverse (latest events as first) (content type: text/html)
 
 ## Running unit tests
 1. Make sure the server is not running on localhost 3000. 
