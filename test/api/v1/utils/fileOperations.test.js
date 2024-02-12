@@ -1,27 +1,31 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const fs = require('fs');
+const stream = require('stream');
 const expect = chai.expect;
 
 const fileOperations = require('../../../../src/api/utils/fileOperations');
 
 describe('readFileInReverse', () => {
-    let readFileMock;
+    let createReadStreamMock;
 
     beforeEach(() => {
-        readFileMock = sinon.stub(fs, 'readFile');
+        createReadStreamMock = sinon.stub(fs, 'createReadStream');
     });
 
-    //restore stubbing after each test case
     afterEach(() => {
         sinon.restore();
     });
 
     function testReadFileInReverse(mockData, numEntries, keyword, done) {
         const expectedData = mockData.split('\n').filter(Boolean).reverse().slice(0, numEntries).join('\n');
-        readFileMock.callsFake((filePath, encoding, callback) => {
-            callback(null, mockData);
+        const readableStream = new stream.Readable({
+            read() {
+                this.push(mockData);
+                this.push(null);
+            }
         });
+        createReadStreamMock.returns(readableStream);
 
         fileOperations.readFileInReverse('filePath', numEntries, keyword, (err, data) => {
             expect(err).to.be.null;
@@ -54,14 +58,18 @@ describe('readFileInReverse', () => {
         testReadFileInReverse('line1 \n line2 \n line3', 3, 'line', done);
     });
 
-    it('returns the last n entries containing the keyword when numEntries matches the number of entries in the log file', (done) => {
+    it('returns the last n entries containing the keyword when numEntries is less than the number of entries containing the keyword in the log file', (done) => {
         const mockData = 'line1 \n keyword line2 \n keyword line3';
         const numEntries = 2;
         const keyword = 'keyword';
         const expectedData = mockData.split('\n').filter(line => line.includes(keyword)).reverse().slice(0, numEntries).join('\n');
-        readFileMock.callsFake((filePath, encoding, callback) => {
-            callback(null, mockData);
+        const readableStream = new stream.Readable({
+            read() {
+                this.push(mockData);
+                this.push(null);
+            }
         });
+        createReadStreamMock.returns(readableStream);
 
         fileOperations.readFileInReverse('filePath', numEntries, keyword, (err, data) => {
             expect(err).to.be.null;
@@ -70,12 +78,11 @@ describe('readFileInReverse', () => {
         });
     });
 
+
     //error
     it('calls the callback with an error if reading the file fails', (done) => {
         const mockError = new Error('error');
-        readFileMock.callsFake((filePath, encoding, callback) => {
-            callback(mockError);
-        });
+        createReadStreamMock.throws(mockError);
 
         fileOperations.readFileInReverse('filePath', 2, null, (err, data) => {
             expect(err).to.equal(mockError);
