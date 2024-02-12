@@ -1,15 +1,13 @@
+const http = require('http');
 const httpStatus = require('http-status-codes');
-const axios = require('axios');
+const url = require('url');
 const path = require('path');
 
 const fileOperations = require('../../utils/fileOperations');
-const {LOG_FILE_READ_ERROR} = require('../../utils/errorMessages');
+const {LOG_FILE_READ_ERROR, REQUEST_TIMED_OUT} = require('../../utils/errorMessages');
+const {LOGS_API_ENDPOINT_V1} = require('../../utils/apiEndpoints');
 const {
-    LOG_FILES_BASE_PATH,
-    REQUEST_PROTOCOL,
-    SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS,
-    SERVER_HOST_NAME,
-    SERVER_PORT
+    LOG_FILES_BASE_PATH, REQUEST_PROTOCOL, SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS, SERVER_HOST_NAME, SERVER_PORT
 } = require("../../utils/constants");
 const primaryServerUrl = REQUEST_PROTOCOL + "://" + SERVER_HOST_NAME + ":" + SERVER_PORT;
 
@@ -30,47 +28,63 @@ exports.getLogsFromServers = async (req, res) => {
         }
     }
 
-    async function getRemoteLogs(url, fileName, numEntries, keyword) {
-        try {
-            const response = await axios.get(url, {
-                params: {
-                    fileName: fileName,
-                    numEntries: numEntries,
-                    keyword: keyword
-                },
-                timeout: SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS
+    async function getRemoteLogs(serverUrl, fileName, numEntries, keyword) {
+        return new Promise((resolve, reject) => {
+            const urlObj = new url.URL(LOGS_API_ENDPOINT_V1, serverUrl);
+            urlObj.searchParams.set('fileName', fileName);
+            if (numEntries !== undefined) {
+                urlObj.searchParams.set('numEntries', numEntries);
+            }
+            if (keyword !== undefined) {
+                urlObj.searchParams.set('keyword', keyword);
+            }
+
+            const req = http.get(urlObj.href, (res) => {
+                let data = '';
+
+                res.on('data', (chunk) => {
+                    data += chunk;
+                });
+
+                res.on('end', () => {
+                    resolve(data);
+                });
+
+            }).on('error', (err) => {
+                console.error(err);
+                reject(new Error(LOG_FILE_READ_ERROR));
             });
-            return response.data;
-        } catch (err) {
-            console.error(err);
-            throw new Error(LOG_FILE_READ_ERROR);
-        }
+
+            // Set a timeout for the request
+            req.setTimeout(SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS, () => {
+                req.destroy();
+                reject(new Error(REQUEST_TIMED_OUT));
+            });
+        });
     }
 
     const logPromises = serverUrls.map(url => {
         if (url === primaryServerUrl) {
-            return getLocalLogs(fileName, numEntries, keyword);
+            return getLocalLogs(fileName, numEntries, keyword).catch(err => err);
         } else {
-            return getRemoteLogs(url, fileName, numEntries, keyword);
+            return getRemoteLogs(url, fileName, numEntries, keyword).catch(err => err);
         }
     });
 
-    try {
-        const allLogs = await Promise.allSettled(logPromises);
-        const logs = allLogs.map((promise, server) => {
-            //server response format
-            if (promise.status === 'fulfilled') {
-                return `Server ${serverUrls[server]}:\nLogs:\n${promise.value}\n`;
+    Promise.all(logPromises).then(allLogs => {
+        const logs = allLogs.map((result, server) => {
+            if (result instanceof Error) {
+                return `Server ${serverUrls[server]}:\n${result.message}\n`;
             } else {
-                return `Server ${serverUrls[server]}:\n${promise.reason}\n`;
+                return `Server ${serverUrls[server]}:\nLogs:\n${result}\n`;
             }
         });
         const combinedLogs = logs.join('\n');
         res.send(combinedLogs);
-    } catch (err) {
+    }).catch(err => {
         console.error(err);
         res.status(httpStatus.INTERNAL_SERVER_ERROR).send(LOG_FILE_READ_ERROR);
-    }
+    });
 
     async function getLocalLogs(fileName, numEntries, keyword) {
         const filePath = path.join(LOG_FILES_BASE_PATH, fileName);

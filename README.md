@@ -27,7 +27,8 @@ Modify the default configurations defined in `LogMonitorService/src/api/utils/co
 
 ## UI
 After running the service, UI can be accessed on `http://localhost:3000/index.html`
-![Log Monitor UI](./images/LogMonitorUI.png)
+![Log Monitor UI Phase1](./images/LogMonitorUI_Phase1.png)
+![Log Monitor UI Phase2](./images/LogMonitorUI_Phase2.png)
 
 ## Running unit tests
 1. Make sure the server is not running on localhost 3000.
@@ -120,6 +121,30 @@ Feb 11 20:40:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread
 Feb 11 20:39:05 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
 ```
 
+#### Get last 5 entries containing the keyword from a log file for two serverURLs (both are valid)
+##### Request
+```text
+curl "http://localhost:3000/api/v1/logs?fileName=system.log&numEntries=5&keyword=System&serverUrls=http://localhost:3000,http://192.168.0.122:3000"
+```
+##### Response
+```
+Server http://localhost:3000:
+Logs:
+Feb 12 02:27:10 MacBook-Pro csc_iseagentd[1124]: Function: sendUIStatus Thread Id: 0xE1ED5000 File: SwiftManager.cpp Line: 186 Level: debug :: MSG_SU_STEP_STATUS, {Status:6,Compliant:3,RemStatus:1803564464,Phase:0,StepNumber:-1,Progress:-1,Attention:0,Cancellable:0,Restartable:0,ErrorMessage:1,Description1:"System scan not required on current Wi-Fi.",Description2:""}
+Feb 12 02:27:10 MacBook-Pro csc_iseagentd[1124]: Function: getIpAndMacList Thread Id: 0xE1ED5000 File: SystemInfo.cpp Line: 131 Level: debug :: MAC List=86:13:9A:27:06:81,86:13:9A:27:06:7F,86:13:9A:27:06:5F,86:13:9A:27:06:60,86:13:9A:27:06:61,36:AC:CE:97:8A:40,36:AC:CE:97:8A:44,36:AC:CE:97:8A:48,36:AC:CE:97:8A:40,6E:7E:67:BB:53:F0,6C:7E:67:BB:53:F0,6C:7E:67:BB:53:F0,9A:B1:B4:B7:17:01,9A:B1:B4:B7:17:01,86:13:9A:27:06:80,86:13:9A:27:06:80,86:13:9A:27:06:80,86:13:9A:27:06:80, IP List=0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,fe80::6c7e:67ff:febb:53f0,192.168.0.237,fe80::1d:f393:b9d5:e0dc,fe80::98b1:b4ff:feb7:1701,fe80::98b1:b4ff:feb7:1701,fe80::ac5d:1d91:a3f5:8bff,fe80::f55:e405:d6fd:736d,fe80::591d:f393:752d:ef1e,fe80::ce81:b1c:bd2c:69e, saved MAC=86:13:9A:27:06:80
+Feb 12 01:57:10 MacBook-Pro csc_iseagentd[1124]: Function: sendUIStatus Thread Id: 0xE1ED5000 File: SwiftManager.cpp Line: 186 Level: debug :: MSG_SU_STEP_STATUS, {Status:6,Compliant:3,RemStatus:1803564464,Phase:0,StepNumber:-1,Progress:-1,Attention:0,Cancellable:0,Restartable:0,ErrorMessage:1,Description1:"System scan not required on current Wi-Fi.",Description2:""}
+Feb 12 01:57:10 MacBook-Pro csc_iseagentd[1124]: Function: getIpAndMacList Thread Id: 0xE1ED5000 File: SystemInfo.cpp Line: 131 Level: debug :: MAC List=86:13:9A:27:06:81,86:13:9A:27:06:7F,86:13:9A:27:06:5F,86:13:9A:27:06:60,86:13:9A:27:06:61,36:AC:CE:97:8A:40,36:AC:CE:97:8A:44,36:AC:CE:97:8A:48,36:AC:CE:97:8A:40,6E:7E:67:BB:53:F0,6C:7E:67:BB:53:F0,6C:7E:67:BB:53:F0,9A:B1:B4:B7:17:01,9A:B1:B4:B7:17:01,86:13:9A:27:06:80,86:13:9A:27:06:80,86:13:9A:27:06:80,86:13:9A:27:06:80, IP List=0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,fe80::6c7e:67ff:febb:53f0,192.168.0.237,fe80::1d:f393:b9d5:e0dc,fe80::98b1:b4ff:feb7:1701,fe80::98b1:b4ff:feb7:1701,fe80::ac5d:1d91:a3f5:8bff,fe80::f55:e405:d6fd:736d,fe80::591d:f393:752d:ef1e,fe80::ce81:b1c:bd2c:69e, saved MAC=86:13:9A:27:06:80
+Feb 12 01:27:10 MacBook-Pro csc_iseagentd[1124]: Function: sendUIStatus Thread Id: 0xE1ED5000 File: SwiftManager.cpp Line: 186 Level: debug :: MSG_SU_STEP_STATUS, {Status:6,Compliant:3,RemStatus:1803564464,Phase:0,StepNumber:-1,Progress:-1,Attention:0,Cancellable:0,Restartable:0,ErrorMessage:1,Description1:"System scan not required on current Wi-Fi.",Description2:""}
+
+Server http://192.168.0.122:3000:
+Logs:
+[   17.566908] kernel: dcdbas dcdbas: Dell Systems Management Base Driver (version 5.6.0-3.3)
+[   12.488971] systemd[1]: Starting Remount Root and Kernel File Systems...
+[   12.336349] systemd[1]: Condition check resulted in File System Check on Root Device being skipped.
+[   12.051717] systemd[1]: Mounting Kernel Trace File System...
+[   12.050303] systemd[1]: Mounting Kernel Debug File System...
+```
+
 #### Get last 5 entries containing the keyword from a log file for two serverURLs (one is invalid)
 ##### Request
 ```text
@@ -137,3 +162,4 @@ Feb 12 01:09:13 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread
 Feb 12 01:08:13 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
 Feb 12 01:07:13 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config
 Feb 12 01:06:12 MacBook-Pro csc_iseagentd[1124]: Function: loadXMLCfgFile Thread Id: 0xE1ED5000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config```
+```

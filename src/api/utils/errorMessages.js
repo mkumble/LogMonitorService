@@ -5,5 +5,6 @@ module.exports = {
     LOG_FILE_READ_ERROR: 'An error occurred while reading the log file.',
     NUM_ENTRIES_MUST_BE_A_NUMBER: 'Number of Entries query param must be a number.',
     NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO: 'Number of Entries must be greater than 0.',
+    REQUEST_TIMED_OUT: 'Request timed out',
     PATH_NOT_ALLOWED_IN_FILE_NAME: 'Path not allowed in file name.'
 };

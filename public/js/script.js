@@ -1,3 +1,8 @@
+//set default server URL to current server
+window.onload = function () {
+    document.getElementById('secondaryServerUrls').value = window.location.origin;
+};
+
 const CONSTANTS = {
     LOG_LOOKUP_SERVER: 'http://localhost:3000',
     LOGS_API_ENDPOINT_V1: '/api/v1/logs'
@@ -47,20 +52,49 @@ function validateNumEntries(numEntries) {
     return true;
 }
 
-
 document.getElementById('logForm').addEventListener('submit', function (event) {
     event.preventDefault();  // Prevent the form from submitting normally
 
     const fileName = document.getElementById('fileName').value;
     const numEntries = document.getElementById('numEntries').value;
     const keyword = document.getElementById('keyword').value;
+    const secondaryServerUrls = document.getElementById('secondaryServerUrls').value;
 
     // client side validation
     if (validateFileName(fileName) && validateNumEntries(numEntries)) {
-        fetch(CONSTANTS.LOG_LOOKUP_SERVER + CONSTANTS.LOGS_API_ENDPOINT_V1 + `?numEntries=${numEntries}&keyword=${keyword}&fileName=${fileName}`)
+        // Clear the logs element
+        document.getElementById('logs').innerHTML = '';
+
+        fetch(CONSTANTS.LOG_LOOKUP_SERVER + CONSTANTS.LOGS_API_ENDPOINT_V1 + `?numEntries=${numEntries}&keyword=${keyword}&fileName=${fileName}&serverUrls=${secondaryServerUrls}`)
             .then(response => response.text())
             .then(data => {
-                document.getElementById('logs').textContent = data;
+                const lines = data.split('\n');
+                let currentServer = '';
+                const servers = {};
+
+                lines.forEach(line => {
+                    if (line.startsWith('Server')) {
+                        currentServer = line;
+                        servers[currentServer] = [];
+                    } else if (currentServer) {
+                        servers[currentServer].push(line);
+                    }
+                });
+
+                for (const server in servers) {
+                    const logBox = document.createElement('div');
+                    logBox.className = 'logBox';
+
+                    const serverName = document.createElement('h3');
+                    serverName.textContent = server;
+                    logBox.appendChild(serverName);
+
+                    const logData = document.createElement('pre');
+                    logData.textContent = servers[server].join('\n');
+                    logBox.appendChild(logData);
+
+                    document.getElementById('logs').appendChild(logBox);
+                }
             })
             .catch(err => {
                 console.error('Error:', err);
