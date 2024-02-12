@@ -7,9 +7,9 @@ Detailed information about the requirements, design, and architecture of this se
 ## Implementation
 1. logsRouter: Accepts the HTTP GET requests for the logs API Endpoints and directs to the logsValidator.
 2. logsValidator: Validates the fileName and numEntries in the input request and directs to the logsController
-2. logsController Ingress: Invokes the fileOperations module for the request.
-3. fileOperations: Reads the stream of log data asynchronously from the local server for the given criteria and returns to logsController. 
-3. logsController Egress: Return the data as text/html in the HTTP Response.
+3. logsController Ingress: Invokes the fileOperations module for the request.
+4. fileOperations: Reads the stream of log data asynchronously from the local server for the given criteria and returns to logsController. 
+5. logsController Egress: Return the data as text/html in the HTTP Response.
 
 ## Installation
 Follow these steps to install the service:
@@ -34,7 +34,7 @@ After running the service, UI can be accessed on `http://localhost:3000/index.ht
 1. Make sure the server is not running on localhost 3000.
 2. Run `npm test` to run all the unit tests
 
-## Commiting Changes
+## Committing Changes
 1. Commits follow the conventional commit specification https://www.conventionalcommits.org/en/v1.0.0/#specification
 2. API design is based on OpenAPI specification https://swagger.io/specification/
 

@@ -7,7 +7,7 @@ const logsValidator = require('../validations/logsValidator')
 // Import logs controller
 const logsController = require('../controllers/logsController');
 
-// Route for retreiving local logs
+// Route for retrieving local logs
 logsRouter.get('/', logsValidator.validateFileName, logsValidator.validateNumEntries, logsController.getLogsFromServers);
 
 module.exports = logsRouter;
