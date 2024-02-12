@@ -27,7 +27,8 @@ Modify the default configurations defined in `LogMonitorService/src/api/utils/co
 
 ## UI
 After running the service, UI can be accessed on `http://localhost:3000/index.html`
-![Log Monitor UI](./images/LogMonitorUI.png)
+![Log Monitor UI Phase1](./images/LogMonitorUI_Phase1.png)
+![Log Monitor UI Phase2](./images/LogMonitorUI_Phase2.png)
 
 ## Running unit tests
 1. Make sure the server is not running on localhost 3000.
