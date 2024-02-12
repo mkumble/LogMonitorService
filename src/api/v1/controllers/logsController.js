@@ -1,5 +1,6 @@
+const http = require('http');
 const httpStatus = require('http-status-codes');
-const axios = require('axios');
+const url = require('url');
 const path = require('path');
 
 const fileOperations = require('../../utils/fileOperations');
@@ -30,21 +31,29 @@ exports.getLogsFromServers = async (req, res) => {
         }
     }
 
-    async function getRemoteLogs(url, fileName, numEntries, keyword) {
-        try {
-            const response = await axios.get(url, {
-                params: {
-                    fileName: fileName,
-                    numEntries: numEntries,
-                    keyword: keyword
-                },
-                timeout: SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS
+    async function getRemoteLogs(serverUrl, fileName, numEntries, keyword) {
+        return new Promise((resolve, reject) => {
+            const urlObj = new url.URL(serverUrl);
+            urlObj.searchParams.set('fileName', fileName);
+            urlObj.searchParams.set('numEntries', numEntries);
+            urlObj.searchParams.set('keyword', keyword);
+
+            http.get(urlObj.href, (res) => {
+                let data = '';
+
+                res.on('data', (chunk) => {
+                    data += chunk;
+                });
+
+                res.on('end', () => {
+                    resolve(data);
+                });
+
+            }).on('error', (err) => {
+                console.error(err);
+                reject(new Error(LOG_FILE_READ_ERROR));
             });
-            return response.data;
-        } catch (err) {
-            console.error(err);
-            throw new Error(LOG_FILE_READ_ERROR);
-        }
+        });
     }
 
     const logPromises = serverUrls.map(url => {
