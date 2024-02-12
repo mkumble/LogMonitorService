@@ -2,9 +2,16 @@ const fs = require('fs');
 const readline = require('readline');
 const logger = require('./logger');
 const constants = require('./constants')
+const errorMessages = require('./errorMessages')
 
 function readFileInReverse(filePath, numEntries, keyword) {
     return new Promise((resolve, reject) => {
+        // Check if file exists before creating read stream
+        if (!fs.existsSync(filePath)) {
+            resolve(errorMessages.FILE_DOESNT_EXIST);
+            return;
+        }
+
         let fileStream;
         try {
             fileStream = fs.createReadStream(filePath, { encoding: constants.ENCODING });
