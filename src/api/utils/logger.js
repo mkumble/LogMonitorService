@@ -2,7 +2,7 @@
 function log(message, type = 'info') {
     const timestamp = new Date().toISOString();
     const messageWithTimestamp = `${timestamp} - Error: ${message}`;
-    switch(type) {
+    switch (type) {
         case 'error':
             console.error(messageWithTimestamp);
             break;
@@ -17,5 +17,5 @@ function log(message, type = 'info') {
 }
 
 module.exports = {
-    log: log
+    log
 };

@@ -42,6 +42,6 @@ function validateNumEntries(req, res, next) {
 
 
 module.exports = {
-    validateFileName: validateFileName,
-    validateNumEntries: validateNumEntries
+    validateFileName,
+    validateNumEntries
 };
