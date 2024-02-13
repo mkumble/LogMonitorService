@@ -14,7 +14,7 @@ function readFileInReverse(filePath, numEntries, keyword) {
 
         let fileStream;
         try {
-            fileStream = fs.createReadStream(filePath, { encoding: constants.ENCODING });
+            fileStream = fs.createReadStream(filePath, {encoding: constants.ENCODING});
         } catch (err) {
             logger.log(err, 'error');
             reject(err);
@@ -49,5 +49,5 @@ function readFileInReverse(filePath, numEntries, keyword) {
 }
 
 module.exports = {
-    readFileInReverse: readFileInReverse
+    readFileInReverse
 };

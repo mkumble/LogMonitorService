@@ -7,9 +7,8 @@ const fileOperations = require('../../utils/fileOperations');
 const {LOG_FILE_READ_ERROR, REQUEST_TIMED_OUT} = require('../../utils/errorMessages');
 const {LOGS_API_ENDPOINT_V1} = require('../../utils/apiEndpoints');
 const {
-    LOG_FILES_BASE_PATH, REQUEST_PROTOCOL, SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS, SERVER_HOST_NAME, SERVER_PORT
+    LOG_FILES_BASE_PATH, PRIMARY_SERVER_URL, REQUEST_PROTOCOL, SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS, SERVER_HOST_NAME, SERVER_PORT
 } = require("../../utils/constants");
-const primaryServerUrl = REQUEST_PROTOCOL + "://" + SERVER_HOST_NAME + ":" + SERVER_PORT;
 
 exports.getLogsFromServers = async (req, res) => {
     let serverUrls = req.query.serverUrls ? req.query.serverUrls.split(',') : [];
@@ -64,7 +63,7 @@ exports.getLogsFromServers = async (req, res) => {
     }
 
     const logPromises = serverUrls.map(url => {
-        if (url === primaryServerUrl) {
+        if (url === PRIMARY_SERVER_URL) {
             return getLocalLogs(fileName, numEntries, keyword).catch(err => err);
         } else {
             return getRemoteLogs(url, fileName, numEntries, keyword).catch(err => err);

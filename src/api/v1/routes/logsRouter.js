@@ -11,3 +11,4 @@ const logsController = require('../controllers/logsController');
 logsRouter.get('/', logsValidator.validateFileName, logsValidator.validateNumEntries, logsController.getLogsFromServers);
 
 module.exports = logsRouter;
+
