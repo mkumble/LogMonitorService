@@ -79,7 +79,7 @@ FileName containing path | Error | 400 | Path not allowed in file name.
 File doesn't exist in /var/log | Error | 500 | An error occurred while reading the log file.
 numEntries < 1 | Error | 400 | Number of Entries must be greater than 0.
 numEntries is NaN | Error | 400 | Number of Entries query param must be a number.
-serverURL is not a valid url | Error | 400 | Invalid Server URL:< invalid server url in request >
+serverURL is not a valid url | Error | 400 | Invalid Server URL: < invalid server url in request >
 All serverURLs are unreachable/invalid | Error | 500 | Server <Server>: Error: An error occurred while reading the log file.
 
 ### Sample Requests/Response
