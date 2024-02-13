@@ -3,7 +3,7 @@ const chaiHttp = require('chai-http');
 const httpStatus = require('http-status-codes');
 
 const app = require('../../../../src/app');
-const {LOG_FILE_READ_ERROR, PATH_NOT_ALLOWED_IN_FILE_NAME} = require('../../../../src/api/errors/errorMessages');
+const { PATH_NOT_ALLOWED_IN_FILE_NAME} = require('../../../../src/api/errors/errorMessages');
 const {LOGS_API_ENDPOINT_V1} = require('../../../../src/api/utils/apiEndpoints');
 
 chai.use(chaiHttp);
@@ -40,8 +40,8 @@ describe('GET /logs', function () {
             .get(LOGS_API_ENDPOINT_V1)
             .query({fileName: invalidFileName})
             .end(function (err, res) {
-                expect(res).to.have.status(httpStatus.INTERNAL_SERVER_ERROR);
-                expect(res.text).to.equal(LOG_FILE_READ_ERROR);
+                expect(res).to.have.status(httpStatus.OK);
+                expect(res.text).to.equal('Server http://localhost:3000:\nError:\nFile does not exist.\n');
                 done();
             });
     });
