@@ -1,6 +1,7 @@
 const httpStatus = require('http-status-codes');
+const url = require('url')
 
-const {FILE_NAME_CANNOT_BE_EMPTY, PATH_NOT_ALLOWED_IN_FILE_NAME, NUM_ENTRIES_MUST_BE_A_NUMBER, NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO} = require('../../utils/errorMessages');
+const {FILE_NAME_CANNOT_BE_EMPTY, INVALID_SERVER_URL, PATH_NOT_ALLOWED_IN_FILE_NAME, NUM_ENTRIES_MUST_BE_A_NUMBER, NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO} = require('../../utils/errorMessages');
 
 //validates the log file name query param
 function validateFileName(req, res, next) {
@@ -11,7 +12,7 @@ function validateFileName(req, res, next) {
     }
 
     // validate filename for invalid/malicious paths
-    if(fileName.includes('/') || fileName.includes('..')) {
+    if (fileName.includes('/') || fileName.includes('..')) {
         return res.status(httpStatus.BAD_REQUEST).send(PATH_NOT_ALLOWED_IN_FILE_NAME);
     }
 
@@ -41,7 +42,33 @@ function validateNumEntries(req, res, next) {
 }
 
 
+function validateServerUrls(req, res, next) {
+    let serverUrls = req.query.serverUrls;
+
+    // If serverUrls is not present, skip validation
+    if (!serverUrls) {
+        return next();
+    }
+
+    // if type is string, convert to array
+    if (typeof serverUrls === 'string') {
+        serverUrls = serverUrls.split(',');
+    }
+
+    for (let serverUrl of serverUrls) {
+        try {
+            new url.URL(serverUrl);
+        } catch (err) {
+            // If error is thrown, then the URL is not valid
+            return res.status(httpStatus.BAD_REQUEST).send({error: INVALID_SERVER_URL + ":" + serverUrl});
+        }
+    }
+
+    next();
+}
+
 module.exports = {
     validateFileName,
-    validateNumEntries
+    validateNumEntries,
+    validateServerUrls
 };
