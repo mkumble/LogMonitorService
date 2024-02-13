@@ -1,6 +1,7 @@
 //module for storing the error messages
 module.exports = {
     FILE_DOESNT_EXIST: 'File does not exist.',
+    FILE_STREAM_READ_ERROR: 'File Stream Readd Error.',
     FILE_NAME_CANNOT_BE_EMPTY: 'File name cannot be empty.',
     INTERNAL_SERVER_ERROR: 'Internal Server Error',
     INVALID_SERVER_URL: 'Invalid Server URL',
