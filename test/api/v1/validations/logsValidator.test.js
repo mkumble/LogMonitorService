@@ -9,7 +9,7 @@ const {
     PATH_NOT_ALLOWED_IN_FILE_NAME,
     NUM_ENTRIES_MUST_BE_A_NUMBER,
     NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO
-} = require('../../../../src/api/utils/errorMessages');
+} = require('../../../../src/api/errors/errorMessages');
 const logsValidator = require('../../../../src/api/v1/validations/logsValidator');
 
 describe('validateRequest', () => {

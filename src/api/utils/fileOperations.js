@@ -2,7 +2,7 @@ const fs = require('fs');
 const readline = require('readline');
 const logger = require('./logger');
 const constants = require('./constants')
-const errorMessages = require('./errorMessages')
+const errorMessages = require('../errors/errorMessages')
 
 function readFileInReverse(filePath, numEntries, keyword) {
     return new Promise((resolve, reject) => {
