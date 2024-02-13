@@ -5,6 +5,7 @@ const {expect} = chai;
 
 const {
     FILE_NAME_CANNOT_BE_EMPTY,
+    INVALID_SERVER_URL,
     PATH_NOT_ALLOWED_IN_FILE_NAME,
     NUM_ENTRIES_MUST_BE_A_NUMBER,
     NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO
@@ -76,6 +77,24 @@ describe('validateRequest', () => {
     it('should call next if numEntries is valid', () => {
         req.query.numEntries = '10';
         logsValidator.validateNumEntries(req, res, next);
+        expect(next.calledOnce).to.be.true;
+    });
+
+    it('should skip validation if serverUrls is not present', () => {
+        logsValidator.validateServerUrls(req, res, next);
+        expect(next.calledOnce).to.be.true;
+    });
+
+    it('should return error if serverUrls is invalid', () => {
+        req.query.serverUrls = 'invalid-url';
+        logsValidator.validateServerUrls(req, res, next);
+        expect(res.status.calledWith(httpStatus.BAD_REQUEST)).to.be.true;
+        expect(res.send.calledWith({error: INVALID_SERVER_URL + ":" + req.query.serverUrls})).to.be.true;
+    });
+
+    it('should call next if serverUrls is valid', () => {
+        req.query.serverUrls = 'https://www.test.com';
+        logsValidator.validateServerUrls(req, res, next);
         expect(next.calledOnce).to.be.true;
     });
 });
