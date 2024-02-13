@@ -1,7 +1,7 @@
 const httpStatus = require('http-status-codes');
 const url = require('url')
 
-const {FILE_NAME_CANNOT_BE_EMPTY, INVALID_SERVER_URL, PATH_NOT_ALLOWED_IN_FILE_NAME, NUM_ENTRIES_MUST_BE_A_NUMBER, NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO} = require('../../utils/errorMessages');
+const {FILE_NAME_CANNOT_BE_EMPTY, INVALID_SERVER_URL, PATH_NOT_ALLOWED_IN_FILE_NAME, NUM_ENTRIES_MUST_BE_A_NUMBER, NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO} = require('../../errors/errorMessages');
 
 //validates the log file name query param
 function validateFileName(req, res, next) {

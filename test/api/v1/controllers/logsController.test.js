@@ -3,7 +3,7 @@ const chaiHttp = require('chai-http');
 const httpStatus = require('http-status-codes');
 
 const app = require('../../../../src/app');
-const {FILE_DOESNT_EXIST, PATH_NOT_ALLOWED_IN_FILE_NAME} = require('../../../../src/api/utils/errorMessages');
+const {FILE_DOESNT_EXIST, PATH_NOT_ALLOWED_IN_FILE_NAME} = require('../../../../src/api/errors/errorMessages');
 const {LOGS_API_ENDPOINT_V1} = require('../../../../src/api/utils/apiEndpoints');
 
 chai.use(chaiHttp);

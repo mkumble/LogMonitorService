@@ -4,7 +4,7 @@ const url = require('url');
 const path = require('path');
 
 const fileOperations = require('../../utils/fileOperations');
-const {LOG_FILE_READ_ERROR, REQUEST_TIMED_OUT} = require('../../utils/errorMessages');
+const {LOG_FILE_READ_ERROR, REQUEST_TIMED_OUT} = require('../../errors/errorMessages');
 const {LOGS_API_ENDPOINT_V1} = require('../../utils/apiEndpoints');
 const {
     LOG_FILES_BASE_PATH, PRIMARY_SERVER_URL, REQUEST_PROTOCOL, SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS, SERVER_HOST_NAME, SERVER_PORT
