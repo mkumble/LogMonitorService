@@ -1,23 +1,15 @@
 const httpStatus = require('http-status-codes');
-const {
-    FileDoesNotExistError, FileStreamError, ReadLineInterfaceError, RequestTimeoutError
-} = require("../../errors/errorClasses");
 const logsService = require('../services/logsService');
-const {FILE_DOESNT_EXIST, INTERNAL_SERVER_ERROR} = require("../../errors/errorMessages");
+const {INTERNAL_SERVER_ERROR} = require("../../errors/errorMessages");
+const responseModel = require("../../../../src/api/v1/models/responseModel");
 
 //controller handles marshalling/unmarshalling the request
 exports.getLogsFromServers = async (req, res) => {
     try {
-        const logs = await logsService.getLogs(req.query);
-        return res.send(logs);
+        const response = await logsService.getLogs(req.query);
+        return res.json(response);
     } catch (err) {
-        console.error(`Error occurred while fetching logs: ${err.message}. Request parameters: ${JSON.stringify(req.query)}`);
-        if (err instanceof FileDoesNotExistError) {
-            res.status(httpStatus.BAD_REQUEST).send(FILE_DOESNT_EXIST);
-        } else if (err instanceof FileStreamError || err instanceof ReadLineInterfaceError || err instanceof RequestTimeoutError) {
-            res.status(httpStatus.INTERNAL_SERVER_ERROR).send(INTERNAL_SERVER_ERROR);
-        } else {
-            res.send(err.message);
-        }
+        //responses from secondary servers have the http status set as part of the payload
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).send(responseModel.getResponse(httpStatus.INTERNAL_SERVER_ERROR, req.query.fileName, null, INTERNAL_SERVER_ERROR));
     }
 };

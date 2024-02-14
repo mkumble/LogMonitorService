@@ -1,19 +1,31 @@
 const httpStatus = require('http-status-codes');
 const url = require('url')
 
-const {FILE_NAME_CANNOT_BE_EMPTY, INVALID_SERVER_URL, PATH_NOT_ALLOWED_IN_FILE_NAME, NUM_ENTRIES_MUST_BE_A_NUMBER, NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO} = require('../../errors/errorMessages');
+const {
+    FILE_NAME_CANNOT_BE_EMPTY,
+    INVALID_SERVER_URL,
+    PATH_NOT_ALLOWED_IN_FILE_NAME,
+    NUM_ENTRIES_MUST_BE_A_NUMBER,
+    NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO
+} = require('../../errors/errorMessages');
+const responseModel = require('../../../../src/api/v1/models/responseModel');
+const {
+    ValidationError
+} = require("../../errors/errorClasses");
 
 //validates the log file name query param
 function validateFileName(req, res, next) {
     const fileName = req.query.fileName;
 
     if (!fileName) {
-        return res.status(httpStatus.BAD_REQUEST).send(FILE_NAME_CANNOT_BE_EMPTY);
+        let responseMessage = responseModel.getResponse(null, null, new ValidationError(FILE_NAME_CANNOT_BE_EMPTY, httpStatus.NOT_FOUND));
+        return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
     }
 
     // validate filename for invalid/malicious paths
     if (fileName.includes('/') || fileName.includes('..')) {
-        return res.status(httpStatus.BAD_REQUEST).send(PATH_NOT_ALLOWED_IN_FILE_NAME);
+        let responseMessage = responseModel.getResponse(fileName, null, new ValidationError(PATH_NOT_ALLOWED_IN_FILE_NAME, httpStatus.BAD_REQUEST));
+        return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
     }
 
     next();
@@ -22,6 +34,7 @@ function validateFileName(req, res, next) {
 //validates the numEntries query param
 function validateNumEntries(req, res, next) {
     let numEntries = req.query.numEntries;
+    let fileName = req.query.fileName;
 
     // If numEntries is not present, skip validation
     if (!numEntries) {
@@ -31,11 +44,13 @@ function validateNumEntries(req, res, next) {
     numEntries = Number(numEntries);
 
     if (isNaN(numEntries)) {
-        return res.status(httpStatus.BAD_REQUEST).send(NUM_ENTRIES_MUST_BE_A_NUMBER);
+        let responseMessage = responseModel.getResponse(fileName, null, new ValidationError(NUM_ENTRIES_MUST_BE_A_NUMBER, httpStatus.BAD_REQUEST));
+        return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
     }
 
     if (numEntries < 1) {
-        return res.status(httpStatus.BAD_REQUEST).send(NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO);
+        let responseMessage = responseModel.getResponse(fileName, null, new ValidationError(NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO, httpStatus.BAD_REQUEST));
+        return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
     }
 
     next();
@@ -44,6 +59,7 @@ function validateNumEntries(req, res, next) {
 
 function validateServerUrls(req, res, next) {
     let serverUrls = req.query.serverUrls;
+    let fileName = req.query.fileName;
 
     // If serverUrls is not present, skip validation
     if (!serverUrls) {
@@ -60,7 +76,8 @@ function validateServerUrls(req, res, next) {
             new url.URL(serverUrl);
         } catch (err) {
             // If error is thrown, then the URL is not valid
-            return res.status(httpStatus.BAD_REQUEST).send({error: INVALID_SERVER_URL + ":" + serverUrl});
+            let responseMessage = responseModel.getResponse(fileName, null, new ValidationError(INVALID_SERVER_URL + ":" + serverUrl, httpStatus.BAD_REQUEST));
+            return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
         }
     }
 

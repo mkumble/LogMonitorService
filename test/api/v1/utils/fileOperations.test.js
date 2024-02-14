@@ -19,8 +19,23 @@ describe('readFileInReverse', () => {
         sinon.restore();
     });
 
+    function getExpectedData(mockData, numEntries, keyword) {
+        let mockDataCopy = mockData.split('\n');
+
+        while (mockDataCopy.length > 0 && mockDataCopy[mockDataCopy.length - 1].trim() === '') {
+            mockDataCopy.pop();
+        }
+        if (keyword) {
+            mockDataCopy = mockDataCopy.filter(line => line.includes(keyword));
+        }
+        if (numEntries) {
+            mockDataCopy = mockDataCopy.slice(-numEntries);
+        }
+        return mockDataCopy.reverse().map((line, index) => ({line: index + 1, content: line}));
+    }
+
     async function testReadFileInReverse(mockData, numEntries, keyword) {
-        const expectedData = mockData.split('\n').filter(Boolean).reverse().slice(0, numEntries).join('\n');
+        const expectedData = getExpectedData(mockData, numEntries, keyword);
         const readableStream = new stream.Readable({
             read() {
                 this.push(mockData);
@@ -30,9 +45,9 @@ describe('readFileInReverse', () => {
         createReadStreamMock.returns(readableStream);
 
         const data = await fileOperations.readFileInReverse('filePath', numEntries, keyword);
-        expect(data).to.equal(expectedData);
+        expect(data).to.deep.equal(expectedData);
         if (keyword) {
-            expect(data.includes(keyword)).to.be.true;
+            expect(JSON.stringify(data).includes(keyword)).to.be.true;
         }
     }
 
@@ -61,7 +76,7 @@ describe('readFileInReverse', () => {
         const mockData = 'line1 \n keyword line2 \n keyword line3';
         const numEntries = 2;
         const keyword = 'keyword';
-        const expectedData = mockData.split('\n').filter(line => line.includes(keyword)).reverse().slice(0, numEntries).join('\n');
+        const expectedData = getExpectedData(mockData, numEntries, keyword);
         const readableStream = new stream.Readable({
             read() {
                 this.push(mockData);
@@ -71,7 +86,7 @@ describe('readFileInReverse', () => {
         createReadStreamMock.returns(readableStream);
 
         const data = await fileOperations.readFileInReverse('filePath', numEntries, keyword);
-        expect(data).to.equal(expectedData);
+        expect(data).to.deep.equal(expectedData);
     });
 
     //error
