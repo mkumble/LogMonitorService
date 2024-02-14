@@ -1,7 +1,7 @@
 //module for logging messages at different log levels
 function log(message, type = 'info') {
     const timestamp = new Date().toISOString();
-    const messageWithTimestamp = `${timestamp} - Error: ${message}`;
+    const messageWithTimestamp = `${timestamp} - ${type}: ${message}`;
     switch (type) {
         case 'error':
             console.error(messageWithTimestamp);

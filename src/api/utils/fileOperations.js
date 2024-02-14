@@ -2,9 +2,8 @@ const fs = require('fs');
 const readline = require('readline');
 const logger = require('./logger');
 const constants = require('./constants')
-const errorMessages = require('../errors/errorMessages')
-
-const { FileDoesNotExistError, FileStreamError } = require('../errors/errorClasses');
+const {FileDoesNotExistError, FileStreamReadError} = require('../errors/errorClasses');
+const {FILE_STREAM_READ_ERROR, FILE_STREAM_CREATE_ERROR} = require("../errors/errorMessages");
 
 //handles reading fileStream data, throws FileStream error if reading fails
 async function handleFileStream(fileStream) {
@@ -24,8 +23,8 @@ async function handleFileStream(fileStream) {
         });
 
         readLineInterface.on('error', (err) => {
-            logger.log(err, 'error');
-            reject(new FileStreamError(err.message));
+            logger.log(err, FILE_STREAM_READ_ERROR);
+            reject(new FileStreamReadError());
         });
     });
 }
@@ -34,28 +33,35 @@ async function handleFileStream(fileStream) {
 function readFileInReverse(filePath, numEntries, keyword) {
     return new Promise((resolve, reject) => {
         if (!fs.existsSync(filePath)) {
-            reject(new FileDoesNotExistError(errorMessages.FILE_DOESNT_EXIST));
+            reject(new FileDoesNotExistError());
             return;
         }
 
         let fileStream;
         try {
-            fileStream = fs.createReadStream(filePath, { encoding: constants.ENCODING });
+            fileStream = fs.createReadStream(filePath, {encoding: constants.ENCODING});
         } catch (err) {
-            logger.log(err, 'error');
-            reject(new FileStreamError(err.message));
+            logger.log(err, FILE_STREAM_CREATE_ERROR);
+            reject(new FileStreamReadError());
             return;
         }
 
         handleFileStream(fileStream)
             .then(lines => {
+
+                // Remove trailing empty lines
+                while (lines.length > 0 && lines[lines.length - 1].trim() === '') {
+                    lines.pop();
+                }
+
                 if (keyword) {
                     lines = lines.filter(line => line.includes(keyword));
                 }
                 if (numEntries) {
                     lines = lines.slice(-numEntries);
                 }
-                resolve(lines.reverse().join('\n'));
+                const jsonLines = lines.reverse().map((line, index) => ({line: index + 1, content: line}));
+                resolve(jsonLines);
             })
             .catch(err => reject(err));
     });

@@ -7,7 +7,7 @@ module.exports = {
     SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS: 2000,
     SERVER_HOST_NAME: 'localhost',
     SERVER_PORT: '3000',
-    get PRIMARY_SERVER_URL() {
+    get CURRENT_SERVER_URL() {
         return this.REQUEST_PROTOCOL + "://" + this.SERVER_HOST_NAME + ":" + this.SERVER_PORT;
     }
 };

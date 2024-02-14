@@ -5,6 +5,8 @@ const httpStatus = require('http-status-codes');
 const app = require('../../../../src/app');
 const { PATH_NOT_ALLOWED_IN_FILE_NAME} = require('../../../../src/api/errors/errorMessages');
 const {LOGS_API_ENDPOINT_V1} = require('../../../../src/api/utils/apiEndpoints');
+const responseModel = require("../../../../src/api/v1/models/responseModel");
+const {FileDoesNotExistError, ValidationError} = require("../../../../src/api/errors/errorClasses");
 
 chai.use(chaiHttp);
 const {expect} = chai;
@@ -41,7 +43,7 @@ describe('GET /logs', function () {
             .query({fileName: invalidFileName})
             .end(function (err, res) {
                 expect(res).to.have.status(httpStatus.OK);
-                expect(res.text).to.equal('Server http://localhost:3000:\nError:\nFile does not exist.\n');
+                expect(JSON.parse(res.text)[0]).to.deep.equal(responseModel.getResponse(invalidFileName, null, new FileDoesNotExistError()));
                 done();
             });
     });
@@ -53,7 +55,7 @@ describe('GET /logs', function () {
             .query({fileName: invalidFileName})
             .end(function (err, res) {
                 expect(res).to.have.status(httpStatus.BAD_REQUEST);
-                expect(res.text).to.equal(PATH_NOT_ALLOWED_IN_FILE_NAME);
+                expect(JSON.parse(res.text)).to.deep.equal(responseModel.getResponse(invalidFileName, null, new ValidationError(PATH_NOT_ALLOWED_IN_FILE_NAME, httpStatus.BAD_REQUEST)));
                 done();
             });
     });
