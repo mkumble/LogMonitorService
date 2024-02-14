@@ -15,7 +15,8 @@ async function handleResponse(res) {
             try {
                 //serialize the logs data to json
                 const jsonData = JSON.parse(data);
-                resolve(jsonData);
+                //secondary server sends an array of length 1, we just need the first entry
+                resolve(jsonData[0]);
             } catch (err) {
                 logger.log(err.message, 'error');
                 reject(new ResponseDataParseError(err.message));

@@ -4,7 +4,7 @@ module.exports = {
     LOG_FILES_BASE_PATH: '/var/log',
     // protocol will be https in a prod env (requests will be TLS encrypted)
     REQUEST_PROTOCOL: 'http',
-    SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS: 2000,
+    SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS: 1000,
     SERVER_HOST_NAME: 'localhost',
     SERVER_PORT: '3000',
     get CURRENT_SERVER_URL() {

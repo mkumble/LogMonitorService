@@ -20,7 +20,10 @@ async function getRemoteLogs(serverUrl, fileName, numEntries, keyword) {
     }
 
     try {
-        return await reqResHandlerService.makeRequest(requestUrl);
+        let response = await reqResHandlerService.makeRequest(requestUrl);
+        //transforming the private ip of secondary server to public ip
+        response.server = serverUrl;
+        return response;
     } catch (err) {
         return responseModel.getResponse(fileName, null, err, serverUrl);
     }
