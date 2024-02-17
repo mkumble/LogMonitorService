@@ -76,6 +76,7 @@
     "mime-db": "^1.52.0",
     "mime-types": "^2.1.35",
     "ms": "^2.0.0",
+    "multistream": "^4.1.0",
     "negotiator": "^0.6.3",
     "nise": "^5.1.9",
     "object-assign": "^4.1.1",
@@ -129,5 +130,6 @@
   "bugs": {
     "url": "https://github.com/mkumble/LogMonitorService/issues"
   },
-  "homepage": "https://github.com/mkumble/LogMonitorService#readme"
+  "homepage": "https://github.com/mkumble/LogMonitorService#readme",
+  "devDependencies": {}
 }

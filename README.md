@@ -8,10 +8,16 @@ Detailed information about the requirements, design, and architecture of this se
 1. logsRouter: Accepts the HTTP GET requests for the logs API Endpoints and directs to the logsValidator.
 2. logsValidator: Validates the fileName and numEntries in the input request and directs to the logsController
 3. logsController Ingress: Invokes the logService module for the request.
-4. logsService: Looks up either the local logs and/or remote logs based on the serverUrls. Uses the fileOperations utility for I/O.
-    Converts the response to a Response model with fields (fileName, logs, error, serverUrl and httpStatus)
-4. fileOperations: Reads the stream of log data asynchronously from the local server for the given criteria and returns to logsService. 
-5. logsService: Sends the resolved Promises to logsController.
+4. logsService: Creates streams either from the local logs and/or remote logs based on the serverUrls. 
+     i. Local logs: 
+         a. fileOperations utility is used to read the local logs data asynchronously to a stream. 
+         b. The stream is filtered based on the criteria using the LogsTransform class.
+         c. The stream is then formatted as JSON using the SingleResponseStreamTransform class.
+     ii. Remote logs:
+         a. Using the reqResHandlerService, a request is made for each of the serverUrls along with the search criteria. 
+            The request is considered as a local log lookup request by the remote server and the stream is returned as specified above.
+         b. The stream response format will be the same as the one returned for local logs.
+    The array of streams are then transformed using the MultiResponseStreamTransform class (formatting the complete payload as a valid JSON).
 5. logsController Egress: Return the data as json in the HTTP Response.
 
 ## Installation
@@ -67,62 +73,26 @@ Filesystem
 Response format: json
 
 Sample Response:
-```javascript
+```json
 [
-  {
-    "server": "http://localhost:3000",
-    "httpStatus": 200,
-    "fileName": "system.log",
-    "logs": [
-      {
-        "line": 1,
-        "content": "Feb 14 03:12:34 MacBook-Pro csc_iseagentd[1170]: Function: sendUIStatus Thread Id: 0xE2801000 File: SwiftManager.cpp Line: 186 Level: debug :: MSG_SU_STEP_STATUS, {Status:6,Compliant:3,RemStatus:1876882848,Phase:0,StepNumber:-1,Progress:-1,Attention:0,Cancellable:0,Restartable:0,ErrorMessage:1,Description1:\"System scan not required on current Wi-Fi.\",Description2:\"\"}"
-      },
-      {
-        "line": 2,
-        "content": "Feb 14 03:12:34 MacBook-Pro csc_iseagentd[1170]: Function: getIpAndMacList Thread Id: 0xE2801000 File: SystemInfo.cpp Line: 131 Level: debug ::"
-      },
-      {
-        "line": 3,
-        "content": "Feb 14 03:12:14 MacBook-Pro csc_iseagentd[1170]: Function: sendUIStatus Thread Id: 0xE2801000 File: SwiftManager.cpp Line: 186 Level: debug :: MSG_SU_STEP_STATUS, {Status:6,Compliant:3,RemStatus:1876882848,Phase:0,StepNumber:-1,Progress:-1,Attention:0,Cancellable:0,Restartable:0,ErrorMessage:1,Description1:\"System scan not required on current Wi-Fi.\",Description2:\"\"}"
-      },
-      {
-        "line": 4,
-        "content": "Feb 14 03:12:14 MacBook-Pro csc_iseagentd[1170]: Function: getIpAndMacList Thread Id: 0xE2801000 File: SystemInfo.cpp Line: 131 Level: debug :: "
-      },
-      {
-        "line": 5,
-        "content": "Feb 14 03:12:01 MacBook-Pro csc_iseagentd[1170]: Function: sendUIStatus Thread Id: 0xE2801000 File: SwiftManager.cpp Line: 186 Level: debug :: MSG_SU_STEP_STATUS, {Status:6,Compliant:3,RemStatus:1876882848,Phase:0,StepNumber:-1,Progress:-1,Attention:0,Cancellable:0,Restartable:0,ErrorMessage:1,Description1:\"System scan not required on current Wi-Fi.\",Description2:\"\"}"
-      }
-    ]
-  },
-  {
-    "server": "http://192.168.0.122:3001",
-    "httpStatus": 200,
-    "fileName": "system.log",
-    "logs": [
-      {
-        "line": 1,
-        "content": "[   17.566908] kernel: dcdbas dcdbas: Dell Systems Management Base Driver (version 5.6.0-3.3)"
-      },
-      {
-        "line": 2,
-        "content": "[   12.488971] systemd[1]: Starting Remount Root and Kernel File Systems..."
-      },
-      {
-        "line": 3,
-        "content": "[   12.336349] systemd[1]: Condition check resulted in File System Check on Root Device being skipped."
-      },
-      {
-        "line": 4,
-        "content": "[   12.051717] systemd[1]: Mounting Kernel Trace File System..."
-      },
-      {
-        "line": 5,
-        "content": "[   12.050303] systemd[1]: Mounting Kernel Debug File System..."
-      }
-    ]
-  }
+    {
+        "serverUrl": "http://localhost:3000",
+        "fileName": "system.log",
+        "logs": [
+            "Feb 16 18:42:41 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+            "Feb 16 18:41:41 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+            "Feb 16 18:40:41 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
+        ]
+    },
+    {
+        "serverUrl": "http://192.168.0.122:3000",
+        "fileName": "system.log",
+        "logs": [
+            "[   33.593532] kernel: Bluetooth: SCO socket layer initialized",
+            "[   33.593528] kernel: Bluetooth: L2CAP socket layer initialized",
+            "[   33.593525] kernel: Bluetooth: HCI socket layer initialized"
+        ]
+    }
 ]
 ```
 
@@ -156,116 +126,38 @@ curl "http://localhost:3000/api/v1/logs?fileName=systemshort.log"
 ```
 ##### Response
 
-```javascript
-[
-  {
-    "server": "http://localhost:3000",
-    "httpStatus": 200,
-    "fileName": "systemshort.log",
-    "logs": [
-      {
-        "line": 1,
-        "content": "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter en5, operStatus=1, wifi=no"
-      },
-      {
-        "line": 2,
-        "content": "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter en6, operStatus=1, wifi=no"
-      },
-      {
-        "line": 3,
-        "content": "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter en1, operStatus=1, wifi=no"
-      },
-      {
-        "line": 4,
-        "content": "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter en2, operStatus=1, wifi=no"
-      },
-      {
-        "line": 5,
-        "content": "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter en3, operStatus=1, wifi=no"
-      },
-      {
-        "line": 6,
-        "content": "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter bridge0, operStatus=1, wifi=no"
-      },
-      {
-        "line": 7,
-        "content": "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter ap1, operStatus=1, wifi=no"
-      },
-      {
-        "line": 8,
-        "content": "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter en0, operStatus=1, wifi=no"
-      },
-      {
-        "line": 9,
-        "content": "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter awdl0, operStatus=1, wifi=no"
-      },
-      {
-        "line": 10,
-        "content": "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter llw0, operStatus=1, wifi=no"
-      },
-      {
-        "line": 11,
-        "content": "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1281 Level: debug :: discarding interface utun0 with gateway fe80::"
-      },
-      {
-        "line": 12,
-        "content": "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter utun0, operStatus=1, wifi=no"
-      },
-      {
-        "line": 13,
-        "content": "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1281 Level: debug :: discarding interface utun1 with gateway fe80::"
-      },
-      {
-        "line": 14,
-        "content": "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter utun1, operStatus=1, wifi=no"
-      },
-      {
-        "line": 15,
-        "content": "Feb 14 00:09:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 16,
-        "content": "Feb 14 00:08:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 17,
-        "content": "Feb 14 00:07:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 18,
-        "content": "Feb 14 00:06:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 19,
-        "content": "Feb 14 00:05:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 20,
-        "content": "Feb 14 00:04:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 21,
-        "content": "Feb 14 00:03:38 MacBook-Pro syslogd[342]: ASL Sender Statistics"
-      },
-      {
-        "line": 22,
-        "content": "Feb 14 00:03:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 23,
-        "content": "Feb 14 00:02:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 24,
-        "content": "Feb 14 00:01:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 25,
-        "content": "Feb 14 00:00:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      }
+```json
+{
+    "serverUrl": "http://localhost:3000",
+        "fileName": "systemshort.log",
+        "logs": [
+        "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter en5, operStatus=1, wifi=no",
+        "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter en6, operStatus=1, wifi=no",
+        "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter en1, operStatus=1, wifi=no",
+        "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter en2, operStatus=1, wifi=no",
+        "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter en3, operStatus=1, wifi=no",
+        "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter bridge0, operStatus=1, wifi=no",
+        "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter ap1, operStatus=1, wifi=no",
+        "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter en0, operStatus=1, wifi=no",
+        "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter awdl0, operStatus=1, wifi=no",
+        "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter llw0, operStatus=1, wifi=no",
+        "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1281 Level: debug :: discarding interface utun0 with gateway fe80::",
+        "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter utun0, operStatus=1, wifi=no",
+        "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1281 Level: debug :: discarding interface utun1 with gateway fe80::",
+        "Feb 14 00:12:18 MacBook-Pro csc_iseagentd[1170]: Function: collectNoMntTargets Thread Id: 0xE2801000 File: SwiftHttpRunner.cpp Line: 1214 Level: debug :: adapter utun1, operStatus=1, wifi=no",
+        "Feb 14 00:09:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 14 00:08:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 14 00:07:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 14 00:06:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 14 00:05:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 14 00:04:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 14 00:03:38 MacBook-Pro syslogd[342]: ASL Sender Statistics",
+        "Feb 14 00:03:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 14 00:02:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 14 00:01:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 14 00:00:38 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
     ]
-  }
-]
+}
 ```
 
 #### Get last 3 entries from a log file
@@ -274,28 +166,16 @@ curl "http://localhost:3000/api/v1/logs?fileName=systemshort.log"
 curl "http://localhost:3000/api/v1/logs?fileName=system.log&numEntries=3"
 ```
 ##### Response
-```javascript
-[
-  {
-    "server": "http://localhost:3000",
-    "httpStatus": 200,
-    "fileName": "system.log",
-    "logs": [
-      {
-        "line": 1,
-        "content": "Feb 14 03:22:51 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 2,
-        "content": "Feb 14 03:21:51 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 3,
-        "content": "Feb 14 03:20:51 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      }
+```json
+{
+    "serverUrl": "http://localhost:3000",
+        "fileName": "system.log",
+        "logs": [
+        "Feb 16 18:47:42 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 16 18:46:42 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 16 18:45:42 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
     ]
-  }
-]
+}
 ```
 
 #### Get last 5 entries containing the keyword from a log file
@@ -304,36 +184,18 @@ curl "http://localhost:3000/api/v1/logs?fileName=system.log&numEntries=3"
 curl "http://localhost:3000/api/v1/logs?fileName=system.log&numEntries=5&keyword=Function:%20loadXML"
 ```
 ##### Response
-```javascript
-[
-  {
-    "server": "http://localhost:3000",
-    "httpStatus": 200,
-    "fileName": "system.log",
-    "logs": [
-      {
-        "line": 1,
-        "content": "Feb 14 03:23:51 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 2,
-        "content": "Feb 14 03:22:51 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 3,
-        "content": "Feb 14 03:21:51 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 4,
-        "content": "Feb 14 03:20:51 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      },
-      {
-        "line": 5,
-        "content": "Feb 14 03:19:51 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-      }
+```json
+{
+    "serverUrl": "http://localhost:3000",
+        "fileName": "system.log",
+        "logs": [
+        "Feb 16 18:47:42 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 16 18:46:42 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 16 18:45:42 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 16 18:45:09 MacBook-Pro Cisco Secure Client[889]: Function: loadXMLCfgFile Thread Id: 0x6BF03000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+        "Feb 16 18:45:09 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
     ]
-  }
-]
+}
 ```
 
 #### Get last 5 entries containing the keyword from a log file for two serverURLs (both are valid)
@@ -342,60 +204,28 @@ curl "http://localhost:3000/api/v1/logs?fileName=system.log&numEntries=5&keyword
 curl "http://localhost:3000/api/v1/logs?fileName=system.log&numEntries=5&keyword=System&serverUrls=http://localhost:3000,http://192.168.0.122:3000"
 ```
 ##### Response
-```javascript
+```json
 [
     {
-        "server": "http://localhost:3000",
-        "httpStatus": 200,
+        "serverUrl": "http://localhost:3000",
         "fileName": "system.log",
         "logs": [
-            {
-                "line": 1,
-                "content": "Feb 14 03:12:34 MacBook-Pro csc_iseagentd[1170]: Function: sendUIStatus Thread Id: 0xE2801000 File: SwiftManager.cpp Line: 186 Level: debug :: MSG_SU_STEP_STATUS, {Status:6,Compliant:3,RemStatus:1876882848,Phase:0,StepNumber:-1,Progress:-1,Attention:0,Cancellable:0,Restartable:0,ErrorMessage:1,Description1:\"System scan not required on current Wi-Fi.\",Description2:\"\"}"
-            },
-            {
-                "line": 2,
-                "content": "Feb 14 03:12:34 MacBook-Pro csc_iseagentd[1170]: Function: getIpAndMacList Thread Id: 0xE2801000 File: SystemInfo.cpp Line: 131 Level: debug ::"
-            },
-            {
-                "line": 3,
-                "content": "Feb 14 03:12:14 MacBook-Pro csc_iseagentd[1170]: Function: sendUIStatus Thread Id: 0xE2801000 File: SwiftManager.cpp Line: 186 Level: debug :: MSG_SU_STEP_STATUS, {Status:6,Compliant:3,RemStatus:1876882848,Phase:0,StepNumber:-1,Progress:-1,Attention:0,Cancellable:0,Restartable:0,ErrorMessage:1,Description1:\"System scan not required on current Wi-Fi.\",Description2:\"\"}"
-            },
-            {
-                "line": 4,
-                "content": "Feb 14 03:12:14 MacBook-Pro csc_iseagentd[1170]: Function: getIpAndMacList Thread Id: 0xE2801000 File: SystemInfo.cpp Line: 131 Level: debug ::"
-            },
-            {
-                "line": 5,
-                "content": "Feb 14 03:12:01 MacBook-Pro csc_iseagentd[1170]: Function: sendUIStatus Thread Id: 0xE2801000 File: SwiftManager.cpp Line: 186 Level: debug :: MSG_SU_STEP_STATUS, {Status:6,Compliant:3,RemStatus:1876882848,Phase:0,StepNumber:-1,Progress:-1,Attention:0,Cancellable:0,Restartable:0,ErrorMessage:1,Description1:\"System scan not required on current Wi-Fi.\",Description2:\"\"}"
-            }
+            "Feb 16 18:45:09 MacBook-Pro csc_iseagentd[1143]: Function: sendUIStatus Thread Id: 0xDF55D000 File: SwiftManager.cpp Line: 186 Level: debug :: MSG_SU_STEP_STATUS, {Status:6,Compliant:3,RemStatus:1834628512,Phase:0,StepNumber:-1,Progress:-1,Attention:0,Cancellable:0,Restartable:0,ErrorMessage:1,Description1:\"System scan not required on current Wi-Fi.\",Description2:\"\"}",
+            "Feb 16 18:45:09 MacBook-Pro csc_iseagentd[1143]: Function: getIpAndMacList Thread Id: 0xDF55D000 File: SystemInfo.cpp Line: 131 Level: debug :: MAC List=86:13:9A:27:06:81,86:13:9A:27:06:7F,86:13:9A:27:06:5F,86:13:9A:27:06:60,86:13:9A:27:06:61,36:AC:CE:97:8A:40,36:AC:CE:97:8A:44,36:AC:CE:97:8A:48,36:AC:CE:97:8A:40,6E:7E:67:BB:53:F0,6C:7E:67:BB:53:F0,6C:7E:67:BB:53:F0,4E:AA:F0:C9:1D:C3,4E:AA:F0:C9:1D:C3,86:13:9A:27:06:80,86:13:9A:27:06:80,86:13:9A:27:06:80,86:13:9A:27:06:80, IP List=0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,fe80::6c7e:67ff:febb:53f0,192.168.0.237,fe80::1441:31ff:65a0:43b0,fe80::4caa:f0ff:fec9:1dc3,fe80::4caa:f0ff:fec9:1dc3,fe80::2bc4:633c:76c0:66b3,fe80::bdc:16da:c898:e76a,fe80::ce81:b1c:bd2c:69e,fe80::3c03:58da:7040:69ec, saved MAC=86:13:9A:27:06:80",
+            "Feb 16 18:15:09 MacBook-Pro csc_iseagentd[1143]: Function: sendUIStatus Thread Id: 0xDF55D000 File: SwiftManager.cpp Line: 186 Level: debug :: MSG_SU_STEP_STATUS, {Status:6,Compliant:3,RemStatus:1834628512,Phase:0,StepNumber:-1,Progress:-1,Attention:0,Cancellable:0,Restartable:0,ErrorMessage:1,Description1:\"System scan not required on current Wi-Fi.\",Description2:\"\"}",
+            "Feb 16 18:15:09 MacBook-Pro csc_iseagentd[1143]: Function: getIpAndMacList Thread Id: 0xDF55D000 File: SystemInfo.cpp Line: 131 Level: debug :: MAC List=86:13:9A:27:06:81,86:13:9A:27:06:7F,86:13:9A:27:06:5F,86:13:9A:27:06:60,86:13:9A:27:06:61,36:AC:CE:97:8A:40,36:AC:CE:97:8A:44,36:AC:CE:97:8A:48,36:AC:CE:97:8A:40,6E:7E:67:BB:53:F0,6C:7E:67:BB:53:F0,6C:7E:67:BB:53:F0,4E:AA:F0:C9:1D:C3,4E:AA:F0:C9:1D:C3,86:13:9A:27:06:80,86:13:9A:27:06:80,86:13:9A:27:06:80,86:13:9A:27:06:80, IP List=0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,0.0.0.0,fe80::6c7e:67ff:febb:53f0,192.168.0.237,fe80::1441:31ff:65a0:43b0,fe80::4caa:f0ff:fec9:1dc3,fe80::4caa:f0ff:fec9:1dc3,fe80::2bc4:633c:76c0:66b3,fe80::bdc:16da:c898:e76a,fe80::ce81:b1c:bd2c:69e,fe80::3c03:58da:7040:69ec, saved MAC=86:13:9A:27:06:80",
+            "Feb 16 18:14:49 MacBook-Pro csc_iseagentd[1143]: Function: sendUIStatus Thread Id: 0xDF55D000 File: SwiftManager.cpp Line: 186 Level: debug :: MSG_SU_STEP_STATUS, {Status:6,Compliant:3,RemStatus:1834628512,Phase:0,StepNumber:-1,Progress:-1,Attention:0,Cancellable:0,Restartable:0,ErrorMessage:1,Description1:\"System scan not required on current Wi-Fi.\",Description2:\"\"}"
         ]
     },
     {
-        "server": "http://192.168.0.122:3001",
-        "httpStatus": 200,
+        "serverUrl": "http://192.168.0.122:3000",
         "fileName": "system.log",
         "logs": [
-            {
-                "line": 1,
-                "content": "[   17.566908] kernel: dcdbas dcdbas: Dell Systems Management Base Driver (version 5.6.0-3.3)"
-            },
-            {
-                "line": 2,
-                "content": "[   12.488971] systemd[1]: Starting Remount Root and Kernel File Systems..."
-            },
-            {
-                "line": 3,
-                "content": "[   12.336349] systemd[1]: Condition check resulted in File System Check on Root Device being skipped."
-            },
-            {
-                "line": 4,
-                "content": "[   12.051717] systemd[1]: Mounting Kernel Trace File System..."
-            },
-            {
-                "line": 5,
-                "content": "[   12.050303] systemd[1]: Mounting Kernel Debug File System..."
-            }
+            "[   17.566908] kernel: dcdbas dcdbas: Dell Systems Management Base Driver (version 5.6.0-3.3)",
+            "[   12.488971] systemd[1]: Starting Remount Root and Kernel File Systems...",
+            "[   12.336349] systemd[1]: Condition check resulted in File System Check on Root Device being skipped.",
+            "[   12.051717] systemd[1]: Mounting Kernel Trace File System...",
+            "[   12.050303] systemd[1]: Mounting Kernel Debug File System..."
         ]
     }
 ]
@@ -407,40 +237,23 @@ curl "http://localhost:3000/api/v1/logs?fileName=system.log&numEntries=5&keyword
 curl "http://localhost:3000/api/v1/logs?fileName=system.log&numEntries=5&keyword=Function:%20loadXML&serverUrls=http://localhost:3001,http://localhost:3000"
 ```
 ##### Response
-```javascript
+```json
 [
     {
-        "server": "http://localhost:3000",
-        "httpStatus": 200,
+        "serverUrl": "http://localhost:3001",
         "fileName": "system.log",
-        "logs": [
-            {
-                "line": 1,
-                "content": "Feb 14 03:27:52 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-            },
-            {
-                "line": 2,
-                "content": "Feb 14 03:26:52 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-            },
-            {
-                "line": 3,
-                "content": "Feb 14 03:25:52 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-            },
-            {
-                "line": 4,
-                "content": "Feb 14 03:24:52 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-            },
-            {
-                "line": 5,
-                "content": "Feb 14 03:23:51 MacBook-Pro csc_iseagentd[1170]: Function: loadXMLCfgFile Thread Id: 0xE2801000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-            }
-        ]
+        "error": []
     },
     {
-        "server": "http://localhost:3000",
-        "serverUrl": "http://192.168.0.122:3000",
+        "serverUrl": "http://localhost:3000",
         "fileName": "system.log",
-        "error": "connect ECONNREFUSED 192.168.0.122:3000"
+        "logs": [
+            "Feb 16 18:49:42 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+            "Feb 16 18:48:42 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+            "Feb 16 18:47:42 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+            "Feb 16 18:46:42 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
+            "Feb 16 18:45:42 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
+        ]
     }
 ]
 ```

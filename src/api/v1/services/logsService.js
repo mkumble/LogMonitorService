@@ -1,11 +1,14 @@
 const path = require("path");
 const url = require("url");
+const Multistream = require('multistream');
 
 const {LOG_FILES_BASE_PATH, CURRENT_SERVER_URL} = require("../../utils/constants");
 const fileOperations = require("../../utils/fileOperations");
 const {LOGS_API_ENDPOINT_V1} = require("../../utils/apiEndpoints");
 const reqResHandlerService = require("./reqResHandlerService");
-const responseModel = require("../models/responseModel");
+const SingleResponseStreamTransform = require("../transforms/SingleResponseStreamTransform");
+const MultiResponseStreamTransform = require("../transforms/MulitResponseStreamTransform");
+const errorHandlerService = require('../services/errorHandlerService');
 
 async function getRemoteLogs(serverUrl, fileName, numEntries, keyword) {
     const requestUrl = new url.URL(LOGS_API_ENDPOINT_V1, serverUrl);
@@ -20,12 +23,9 @@ async function getRemoteLogs(serverUrl, fileName, numEntries, keyword) {
     }
 
     try {
-        let response = await reqResHandlerService.makeRequest(requestUrl);
-        //transforming the private ip of secondary server to public ip
-        response.server = serverUrl;
-        return response;
+        return await reqResHandlerService.makeRequest(requestUrl);
     } catch (err) {
-        return responseModel.getResponse(fileName, null, err, serverUrl);
+        return errorHandlerService.getErrorStream(err).pipe(new SingleResponseStreamTransform(fileName, serverUrl, "error"));
     }
 }
 
@@ -33,11 +33,11 @@ async function getLocalLogs(fileName, numEntries, keyword) {
     const filePath = path.join(LOG_FILES_BASE_PATH, fileName);
 
     try {
-        const logs = await fileOperations.readFileInReverse(filePath, numEntries, keyword);
-        return responseModel.getResponse(fileName, logs, null);
+        const logsStream = await fileOperations.readFileInReverse(filePath, numEntries, keyword);
+        return logsStream.pipe(new SingleResponseStreamTransform(fileName, null, "logs"));
 
     } catch (err) {
-        return responseModel.getResponse(fileName, null, err);
+        return errorHandlerService.getErrorStream(err).pipe(new SingleResponseStreamTransform(fileName, null, "error"))
     }
 }
 
@@ -48,20 +48,25 @@ async function getLocalLogs(fileName, numEntries, keyword) {
 exports.getLogs = async ({serverUrls, fileName, numEntries, keyword}) => {
     let serverUrlsArray = serverUrls ? serverUrls.split(',') : [];
 
-    //if no serverUrls, return local logs
+    // If no serverUrls, return local logs
     if (serverUrlsArray.length === 0) {
-        serverUrlsArray[0] = CURRENT_SERVER_URL;
+        return getLocalLogs(fileName, numEntries, keyword);
     }
 
-    let uniqueServerUrls = new Set(serverUrlsArray);
-    const logPromises = Array.from(uniqueServerUrls).map(url => {
+    let uniqueServerUrls = Array.from(new Set(serverUrlsArray));
+    const logStreamPromiseArray = uniqueServerUrls.map(async (url, index) => {
+        let logStream;
         if (url === CURRENT_SERVER_URL) {
-            return getLocalLogs(fileName, numEntries, keyword).catch(err => err);
+            logStream = await getLocalLogs(fileName, numEntries, keyword);
         } else {
-            return getRemoteLogs(url, fileName, numEntries, keyword).catch(err => err);
+            logStream = await getRemoteLogs(url, fileName, numEntries, keyword);
         }
+
+        // format the logStream data using MultiResponseStreamTransform
+        return logStream.pipe(new MultiResponseStreamTransform(index, uniqueServerUrls.length));
+
     });
 
-    return Promise.all(logPromises)
-        .then(allLogs => allLogs);
+    // combining all resolved promise array streams to a multistream
+    return new Multistream(await Promise.all(logStreamPromiseArray));
 };
