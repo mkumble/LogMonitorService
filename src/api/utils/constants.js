@@ -1,13 +1,14 @@
 //module for storing re-usable constants
 module.exports = {
-    ENCODING: 'utf8',
+    UTF8_ENCODING: 'utf8',
     LOG_FILES_BASE_PATH: '/var/log',
     // protocol will be https in a prod env (requests will be TLS encrypted)
     REQUEST_PROTOCOL: 'http',
-    SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS: 1000,
+    // milliseconds to wait before timing out on remote servers
+    SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS: 5000,
     SERVER_HOST_NAME: 'localhost',
     SERVER_PORT: '3000',
     get CURRENT_SERVER_URL() {
-        return this.REQUEST_PROTOCOL + "://" + this.SERVER_HOST_NAME + ":" + this.SERVER_PORT;
+        return `${this.REQUEST_PROTOCOL}://${this.SERVER_HOST_NAME}:${this.SERVER_PORT}`;
     }
 };
