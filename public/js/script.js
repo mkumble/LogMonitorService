@@ -92,37 +92,51 @@ document.getElementById('logForm').addEventListener('submit', function (event) {
 
         fetch(CONSTANTS.LOG_LOOKUP_SERVER + CONSTANTS.LOGS_API_ENDPOINT_V1 + `?numEntries=${numEntries}&keyword=${keyword}&fileName=${fileName}&serverUrls=${secondaryServerUrls}`)
             .then(response => response.json())  // Parse the response as JSON
-            .then(data => {
-                data.forEach(serverLogs => {  // Iterate over each server's logs
-                    const logBox = document.createElement('div');
-                    logBox.className = 'logBox';
-
-                    const serverName = document.createElement('h3');
-                    serverName.textContent = `Server: ${serverLogs.server}`;
-                    logBox.appendChild(serverName);
-
-                    const fileName = document.createElement('h4');
-                    fileName.textContent = `File: ${serverLogs.fileName}`;
-                    logBox.appendChild(fileName);
-
-                    if (serverLogs.error) {
-                        const errorMessage = document.createElement('p');
-                        errorMessage.textContent = `Error: ${serverLogs.error}`;
-                        errorMessage.style.color = 'red';
-                        logBox.appendChild(errorMessage);
-                    } else {
-                        const logData = document.createElement('pre');
-                        logData.textContent = serverLogs.logs.map(log => `Line ${log.line}: ${log.content}`).join('\n');
-                        logBox.appendChild(logData);
-                    }
-
-                    document.getElementById('logs').appendChild(logBox);
-                });
+            .then(serverResponse => {
+                if (Array.isArray(serverResponse)) {
+                    serverResponse.forEach(processServerResponse);
+                } else {
+                    processServerResponse(serverResponse);
+                }
             })
             .catch(err => {
                 console.error('Error:', err);
             });
 
+        function processServerResponse(serverResponse) {
+            const logBox = document.createElement('div');
+            logBox.className = 'logBox';
 
+            const serverName = document.createElement('h3');
+            serverName.textContent = `Server: ${serverResponse.serverUrl}`;  // Access the serverUrl property
+            logBox.appendChild(serverName);
+
+            const fileName = document.createElement('h4');
+            fileName.textContent = `File: ${serverResponse.fileName}`;  // Access the fileName property
+            logBox.appendChild(fileName);
+
+            if (serverResponse.error) {
+                // If error is an array, create a separate paragraph for each error message
+                if (Array.isArray(serverResponse.error)) {
+                    serverResponse.error.forEach(errorMsg => {
+                        const errorMessage = document.createElement('p');
+                        errorMessage.textContent = `Error: ${errorMsg}`;
+                        errorMessage.style.color = 'red';
+                        logBox.appendChild(errorMessage);
+                    });
+                } else {
+                    const errorMessage = document.createElement('p');
+                    errorMessage.textContent = `Error: ${serverResponse.error}`;
+                    errorMessage.style.color = 'red';
+                    logBox.appendChild(errorMessage);
+                }
+            } else {
+                const logData = document.createElement('pre');
+                logData.textContent = serverResponse.logs.join('\n');
+                logBox.appendChild(logData);
+            }
+
+            document.getElementById('logs').appendChild(logBox);
+        }
     }
 });
