@@ -8,7 +8,7 @@ const {
     NUM_ENTRIES_MUST_BE_A_NUMBER,
     NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO
 } = require('../../errors/errorMessages');
-const responseModel = require('../../../../src/api/v1/models/responseModel');
+const errorHandlerService = require('../services/errorHandlerService');
 const {
     ValidationError
 } = require("../../errors/errorClasses");
@@ -18,13 +18,13 @@ function validateFileName(req, res, next) {
     const fileName = req.query.fileName;
 
     if (!fileName) {
-        let responseMessage = responseModel.getResponse(null, null, new ValidationError(FILE_NAME_CANNOT_BE_EMPTY, httpStatus.NOT_FOUND));
+        let responseMessage = errorHandlerService.getResponse(null, new ValidationError(FILE_NAME_CANNOT_BE_EMPTY, httpStatus.NOT_FOUND));
         return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
     }
 
     // validate filename for invalid/malicious paths
     if (fileName.includes('/') || fileName.includes('..')) {
-        let responseMessage = responseModel.getResponse(fileName, null, new ValidationError(PATH_NOT_ALLOWED_IN_FILE_NAME, httpStatus.BAD_REQUEST));
+        let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(PATH_NOT_ALLOWED_IN_FILE_NAME, httpStatus.BAD_REQUEST));
         return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
     }
 
@@ -44,12 +44,12 @@ function validateNumEntries(req, res, next) {
     numEntries = Number(numEntries);
 
     if (isNaN(numEntries)) {
-        let responseMessage = responseModel.getResponse(fileName, null, new ValidationError(NUM_ENTRIES_MUST_BE_A_NUMBER, httpStatus.BAD_REQUEST));
+        let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(NUM_ENTRIES_MUST_BE_A_NUMBER, httpStatus.BAD_REQUEST));
         return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
     }
 
     if (numEntries < 1) {
-        let responseMessage = responseModel.getResponse(fileName, null, new ValidationError(NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO, httpStatus.BAD_REQUEST));
+        let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO, httpStatus.BAD_REQUEST));
         return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
     }
 
@@ -76,7 +76,7 @@ function validateServerUrls(req, res, next) {
             new url.URL(serverUrl);
         } catch (err) {
             // If error is thrown, then the URL is not valid
-            let responseMessage = responseModel.getResponse(fileName, null, new ValidationError(INVALID_SERVER_URL + ":" + serverUrl, httpStatus.BAD_REQUEST));
+            let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(INVALID_SERVER_URL + ":" + serverUrl, httpStatus.BAD_REQUEST));
             return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
         }
     }

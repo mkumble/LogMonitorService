@@ -11,7 +11,7 @@ for each serverUrl request
  */
 function getResponse(fileName, logs, error, serverUrl) {
     let responseMessage = {
-        server: CURRENT_SERVER_URL,
+        serverUrl: CURRENT_SERVER_URL,
         httpStatus: httpStatus.OK
     };
 
