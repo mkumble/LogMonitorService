@@ -20,5 +20,5 @@ module.exports = {
     PATH_NOT_ALLOWED_IN_FILE_NAME: 'Path not allowed in file name.',
 
     //response errors
-    INTERNAL_SERVER_ERROR: 'Internal Server Error'
+    INTERNAL_SERVER_ERROR: 'Internal Server Error occurred.'
 };

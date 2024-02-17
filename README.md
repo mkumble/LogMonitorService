@@ -60,10 +60,8 @@ After running the service, UI can be accessed on `http://localhost:3000/index.ht
 2. API design is based on OpenAPI specification https://swagger.io/specification/
 ```
 
-## APIs
+## API: (GET) Log file lookup
 #### Pre-requisite: Please follow the 'Running the service' instructions above.
-
-### (GET) Log file lookup
 ```
 GET /api/v1/logs
 ```
@@ -71,21 +69,21 @@ Retrieve a log file from local and/or remote server(s).
 
 ### Parameters:
 
-| Name       | Type   | Mandatory | Description                                                                        |
-|------------|--------|-----------|------------------------------------------------------------------------------------|
-| fileName   | STRING | YES       | A valid fileName (in /var/logs) on the local server.                               |
-| numEntries | NUMBER | NO        | Number of log lines/entries to retrieve.                                           |
-| keyword    | STRING | NO        | An encoded case-sensitive string to search in the log file                         |
-| serverUrls | STRING | NO        | Comma separated list of server URLs. These servers must be running the application |
+| Name       | Type   | Mandatory | Description                                                                                                                                                                      |
+|------------|--------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| fileName   | STRING | YES       | A valid fileName (in /var/logs) on the local server.                                                                                                                             |
+| numEntries | NUMBER | NO        | Number of log lines/entries to retrieve.                                                                                                                                         |
+| keyword    | STRING | NO        | An encoded case-sensitive string to search in the log file.                                                                                                                      |
+| serverUrls | STRING | NO        | Comma separated list of server URLs with port (`SECONDARY SERVER URL FORMAT: http://<IP OR HOSTNAME>:<PORT>`). These secondary servers must be running the REST API application. |
 
-### Data Source:
+## Data Source:
 Filesystem OR a Secondary Server REST Endpoint
 
-### Response:
-
+## Response:
 Format: `application/json`
 
-#### Sample Templates:
+### Sample Response Templates:
+#### Single Server Response:
 
 Success:
 ```json
@@ -99,8 +97,9 @@ Success:
   ]
 }
 ```
-Logs are ordered from latest to oldest.
-
+Note: Logs are ordered from latest to oldest.
+<br>
+<br>
 Error:
 ```json
 {
@@ -113,29 +112,84 @@ Error:
   ]
 }
 ```
+<br>
+
+#### Multi-Server Response
+Success:
+```json
+[
+  {
+    "serverUrl": "<SERVER_URL_1>",
+    "fileName": "<FILE_NAME>",
+    "httpStatus": "<HTTP STATUS FOR THE CURRENT PAYLOAD>",
+    "logs": [
+      "<LOG LINE 1>",
+      "<LOG LINE 2>"
+    ]
+  },
+  {
+    "serverUrl": "<SERVER_URL_2>",
+    "fileName": "<FILE_NAME>",
+    "httpStatus": "<HTTP STATUS FOR THE CURRENT PAYLOAD>",
+    "logs": [
+      "<LOG LINE 1>",
+      "<LOG LINE 2>"
+    ]
+  }
+]
+```
+Note: Logs are ordered from latest to oldest.
+<br>
+<br>
+Error:
+```json
+[
+  {
+    "serverUrl": "<SERVER_URL_1>",
+    "fileName": "<FILE_NAME>",
+    "httpStatus": "<HTTP STATUS FOR THE CURRENT PAYLOAD>",
+    "errors": [
+      "<ERROR MESSAGE 1>",
+      "<ERROR MESSAGE 2>"
+    ]
+  },
+  {
+    "serverUrl": "<SERVER_URL_2>",
+    "fileName": "<FILE_NAME>",
+    "httpStatus": "<HTTP STATUS FOR THE CURRENT PAYLOAD>",
+    "errors": [
+      "<ERROR MESSAGE 1>",
+      "<ERROR MESSAGE 2>"
+    ]
+  }
+]
+```
+<br>
 
 ### Sample Scenarios:
 ##### Happy Paths:
-| Input                                                                                               | Status  | Status Code | Output/Error Message                                                                      |
-|-----------------------------------------------------------------------------------------------------|---------|-------------|-------------------------------------------------------------------------------------------|
-| Valid fileName                                                                                      | Success | 200         | Complete logs of the file (latest to old).                                                |
-| Valid fileName, Valid numEntries                                                                    | Success | 200         | Most Recent 'numEntries' lines of the file.                                               |
-| Valid fileName, Valid numEntries, Valid (URL encoded) keyword                                       | Success | 200         | Most recent 'numEntries' lines of the file containing the keyword/text.                   |
-| Valid fileName, Valid numEntries, Valid (URL encoded) keyword, Valid serverURLs                     | Success | 200         | Most recent 'numEntries' lines of the file containing the keyword/text for each serverURL |
-| Valid fileName, Valid numEntries, Valid (URL encoded) keyword, Partially reachable/valid serverURLs | Success | 200         | Combination of success and error messages based on the response for each serverURL.       |
+| Input                                                                                                           | Secondary Server Response Payload HTTP Status Code           | HTTP Response Status Code | Output/Error Message                                                                     |
+|-----------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|-----------------------------------------------------------|------------------------------------------------------------------------------------------|
+| Valid fileName                                                                                                  | 200                                                               | 200                                                       | Complete logs of the file (latest to old).                                               |
+| Valid fileName, Valid numEntries                                                                                | 200                                                               | 200                                                       | Most Recent 'numEntries' lines of the file.                                              |
+| Valid fileName, Valid numEntries, Valid (URL encoded) keyword                                                   | 200                                                               | 200                                                       | Most recent 'numEntries' lines of the file containing the keyword/text.                  |
+| Valid fileName, Valid numEntries, Valid (URL encoded) keyword, Valid serverURLs (all reachable servers)         | 200                                                               | 200                                                       | Most recent 'numEntries' lines of the file containing the keyword/text for each serverURL |
+| Valid fileName, Valid numEntries, Valid (URL encoded) keyword, Valid serverURLs (with some unreachable servers) | 200 / 404 / 408 / 500 (depending on the secondary server response) | 200                                                       | Combination of success and error message response based on the serverURL.                |
 
 <br>
 
 ##### Error Paths:
-| Input                                  | Status | Status Code | Output/Error Message                                                  |
-|----------------------------------------|--------|-------------|-----------------------------------------------------------------------|
-| Missing fileName                       | Error  | 400         | File name cannot be empty.                                            |
-| FileName containing path               | Error  | 400         | Path not allowed in file name.                                        |
-| File doesn't exist in /var/log         | Error  | 500         | An error occurred while reading the log file.                         |
-| numEntries < 1                         | Error  | 400         | Number of Entries must be greater than 0.                             |
-| numEntries is NaN                      | Error  | 400         | Number of Entries query param must be a number.                       |
-| serverURL is not a valid url           | Error  | 400         | Invalid Server URL: < invalid server url in request >                 |
-| All serverURLs are unreachable/invalid | Error  | 500         | Server <Server>: Error: An error occurred while reading the log file. |
+| Input                                                               | Secondary Server Response Payload HTTP Status Code | HTTP Response Status Code | Output/Error Message                                                  |
+|---------------------------------------------------------------------|----------------------------------------------------|---------------------------|-----------------------------------------------------------------------|
+| Missing fileName                                                    | 400                                                | 400                       | File name cannot be empty.                                            |
+| FileName containing path                                            | 400                                                | 400                       | Path not allowed in file name.                                        |
+| File doesn't exist in /var/log                                      | 404                                                | 200                       | File does not exist.                       |
+| numEntries < 1                                                      | 400                                                | 400                       | Number of Entries must be greater than 0.                             |
+| numEntries is NaN                                                   | 400                                                | 400                       | Number of Entries query param must be a number.                       |
+| A serverURL in serverUrls param is invalid                          | 400                                                | 400                       | Invalid Server URL: < invalid server url in request >                 |
+| File doesn't exist in some secondary server(s)                      | 404                                                | 200                       | File does not exist. |
+| Request timeout in some secondary server(s)                         | 408                                                | 200                       | The request to the server timed out.                                                                     |
+| File Stream Read Error / Generic Errors on some secondary server(s) | 500                                                | 200                       | Internal Server Error occurred.                                                                                                         |
 
 ### Sample Requests/Response
 
