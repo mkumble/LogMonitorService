@@ -5,6 +5,7 @@ This service provides on-demand monitoring of various Unix-based servers without
 Detailed information about the requirements, design, and architecture of this service can be found here: https://docs.google.com/document/d/13GyRpE5BllY1iMDoQd9ffszhTRFUfHQzeOUxAGgiXe4/edit?usp=sharing
 
 ## Implementation
+```text
 1. logsRouter: Accepts the HTTP GET requests for the logs API Endpoints and directs to the logsValidator.
 2. logsValidator: Validates the fileName and numEntries in the input request and directs to the logsController
 3. logsController Ingress: Invokes the logService module for the request.
@@ -19,33 +20,45 @@ Detailed information about the requirements, design, and architecture of this se
          b. The stream response format will be the same as the one returned for local logs.
     The array of streams are then transformed using the MultiResponseStreamTransform class (formatting the complete payload as a valid JSON).
 5. logsController Egress: Return the data as json in the HTTP Response.
+```
 
 ## Installation
+```text
 Follow these steps to install the service:
 1. Make sure npm is installed on the host.
 2. Clone the repo: `git clone https://github.com/mkumble/LogMonitorService.git`
 3. Install dependencies: ```cd LogMonitorService; npm install```
+```
 
 ## Configuration
+```text
 Modify the default configurations defined in `LogMonitorService/src/api/utils/constants.js` as needed (Example: change SERVER_PORT)
+```
 
 ## Running the service
+```text
 1. Follow the Installation instructions above.
 2. Open the terminal and navigate to the src directory: `cd LogMonitorService/src`
 3. Start the node.js application: `node app.js`. By default, the server runs on `http://localhost:3000`
+```
 
 ## UI
+
 After running the service, UI can be accessed on `http://localhost:3000/index.html`
 ![Log Monitor UI Phase1](./images/LogMonitorUI_Phase1.png)
 ![Log Monitor UI Phase2](./images/LogMonitorUI_Phase2.png)
 
 ## Running unit tests
+```text
 1. Make sure the server is not running on localhost 3000.
 2. Run `npm test` to run all the unit tests
+```
 
 ## Committing Changes
+```text
 1. Commits follow the conventional commit specification https://www.conventionalcommits.org/en/v1.0.0/#specification
 2. API design is based on OpenAPI specification https://swagger.io/specification/
+```
 
 ## APIs
 #### Pre-requisite: Please follow the 'Running the service' instructions above.
@@ -70,7 +83,7 @@ Filesystem
 
 **Response:**
 
-Response format: json
+Response format: application/json
 
 Sample Response:
 ```json
