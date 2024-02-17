@@ -116,25 +116,26 @@ Error:
 
 ### Sample Scenarios:
 ##### Happy Paths:
-Input | Status | Status Code | Output/Error Message
------------- | ------------ | ------------ | ------------
-Valid fileName | Success | 200 | Complete logs of the file (latest to old).
-Valid fileName, Valid numEntries | Success | 200 | Most Recent 'numEntries' lines of the file.
-Valid fileName, Valid numEntries, Valid (URL encoded) keyword | Success | 200 | Most recent 'numEntries' lines of the file containing the keyword/text.
-Valid fileName, Valid numEntries, Valid (URL encoded) keyword, Valid serverURLs | Success | 200 | Most recent 'numEntries' lines of the file containing the keyword/text for each serverURL
-Valid fileName, Valid numEntries, Valid (URL encoded) keyword, Partially reachable/valid serverURLs | Success | 200 | Combination of success and error messages based on the response for each serverURL.
+| Input                                                                                               | Status  | Status Code | Output/Error Message                                                                      |
+|-----------------------------------------------------------------------------------------------------|---------|-------------|-------------------------------------------------------------------------------------------|
+| Valid fileName                                                                                      | Success | 200         | Complete logs of the file (latest to old).                                                |
+| Valid fileName, Valid numEntries                                                                    | Success | 200         | Most Recent 'numEntries' lines of the file.                                               |
+| Valid fileName, Valid numEntries, Valid (URL encoded) keyword                                       | Success | 200         | Most recent 'numEntries' lines of the file containing the keyword/text.                   |
+| Valid fileName, Valid numEntries, Valid (URL encoded) keyword, Valid serverURLs                     | Success | 200         | Most recent 'numEntries' lines of the file containing the keyword/text for each serverURL |
+| Valid fileName, Valid numEntries, Valid (URL encoded) keyword, Partially reachable/valid serverURLs | Success | 200         | Combination of success and error messages based on the response for each serverURL.       |
+
 <br>
 
 ##### Error Paths:
-Input | Status | Status Code | Output/Error Message
------------- | ------------ | ------------ | ------------
-Missing fileName | Error | 400 | File name cannot be empty.
-FileName containing path | Error | 400 | Path not allowed in file name.
-File doesn't exist in /var/log | Error | 500 | An error occurred while reading the log file.
-numEntries < 1 | Error | 400 | Number of Entries must be greater than 0.
-numEntries is NaN | Error | 400 | Number of Entries query param must be a number.
-serverURL is not a valid url | Error | 400 | Invalid Server URL: < invalid server url in request >
-All serverURLs are unreachable/invalid | Error | 500 | Server <Server>: Error: An error occurred while reading the log file.
+| Input                                  | Status | Status Code | Output/Error Message                                                  |
+|----------------------------------------|--------|-------------|-----------------------------------------------------------------------|
+| Missing fileName                       | Error  | 400         | File name cannot be empty.                                            |
+| FileName containing path               | Error  | 400         | Path not allowed in file name.                                        |
+| File doesn't exist in /var/log         | Error  | 500         | An error occurred while reading the log file.                         |
+| numEntries < 1                         | Error  | 400         | Number of Entries must be greater than 0.                             |
+| numEntries is NaN                      | Error  | 400         | Number of Entries query param must be a number.                       |
+| serverURL is not a valid url           | Error  | 400         | Invalid Server URL: < invalid server url in request >                 |
+| All serverURLs are unreachable/invalid | Error  | 500         | Server <Server>: Error: An error occurred while reading the log file. |
 
 ### Sample Requests/Response
 

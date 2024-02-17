@@ -1,4 +1,3 @@
-let httpStatus = require("http-status-codes");
 const {CURRENT_SERVER_URL} = require("../../utils/constants");
 
 /*
