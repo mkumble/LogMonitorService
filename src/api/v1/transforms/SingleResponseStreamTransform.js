@@ -4,6 +4,10 @@ const httpStatus = require('http-status-codes');
 const {CURRENT_SERVER_URL, UTF8_ENCODING} = require("../../utils/constants");
 
 //Tranforms the logs to a Response format with fields: serverUrl, fileName and (Logs or Errors)
+function createPayload(serverUrl, fileName, httpStatus, responseType, data) {
+    return `{"serverUrl": "${serverUrl}",\n"fileName": "${fileName}",\n"httpStatus": ${httpStatus},\n"${responseType}": [\n${JSON.stringify(data)}`;
+}
+
 class SingleResponseStreamTransform extends Transform {
     constructor(fileName, serverUrl, responseType, httpStatusCode) {
         super({objectMode: true});
@@ -17,7 +21,7 @@ class SingleResponseStreamTransform extends Transform {
     _transform(chunk, encoding, callback) {
         let data = chunk.toString(UTF8_ENCODING);
         if (this.isFirstChunk) {
-            this.push(`{"serverUrl": "${this.serverUrl}",\n"fileName": "${this.fileName}",\n"httpStatus": ${this.httpStatus},\n"${this.responseType}": [\n${JSON.stringify(data)}`);
+            this.push(createPayload(this.serverUrl, this.fileName, this.httpStatus, this.responseType, data));
             this.isFirstChunk = false;
         } else {
             this.push(`,\n${JSON.stringify(data)}`);
@@ -29,11 +33,10 @@ class SingleResponseStreamTransform extends Transform {
         if (!this.isFirstChunk) {
             this.push('\n]}\n');
         } else {
-            this.push(`{"serverUrl": "${this.serverUrl}",\n"fileName": "${this.fileName}",\n"httpStatus": "${this.httpStatus}",\n"${this.responseType}": []}\n`);
+            this.push(createPayload(this.serverUrl, this.fileName, this.httpStatus, this.responseType, []));
         }
         callback();
     }
 }
-
 
 module.exports = SingleResponseStreamTransform;
