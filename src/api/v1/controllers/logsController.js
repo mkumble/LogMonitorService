@@ -4,8 +4,9 @@ const errorHandlerService = require('../services/errorHandlerService');
 //controller handles marshalling/unmarshalling the request
 exports.getLogsFromServers = async (req, res) => {
     try {
-        const response = await logsService.getLogs(req.query);
-        return res.json(response);
+        //stream of multiple logs (each log from a server)
+        const logsStream = await logsService.getLogs(req.query);
+        logsStream.pipe(res);
     } catch (err) {
         errorResponse = errorHandlerService.getResponse(err);
         //responses from secondary servers have the http status set as part of the payload
