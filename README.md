@@ -43,12 +43,12 @@ Modify the default configurations defined in `LogMonitorService/src/api/utils/co
 ```
 
 ## UI
-
 After running the service, UI can be accessed on `http://localhost:3000/index.html`
 ![Log Monitor UI Phase1](./images/LogMonitorUI_Phase1.png)
 ![Log Monitor UI Phase2](./images/LogMonitorUI_Phase2.png)
 
-## Running unit tests
+## Tests
+### Running unit tests
 ```text
 1. Make sure the server is not running on localhost 3000.
 2. Run `npm test` to run all the unit tests
@@ -67,49 +67,55 @@ After running the service, UI can be accessed on `http://localhost:3000/index.ht
 ```
 GET /api/v1/logs
 ```
-Retrieve a log file from local server.
+Retrieve a log file from local and/or remote server(s).
 
-**Parameters:**
+### Parameters:
 
 | Name       | Type   | Mandatory | Description                                                                        |
 |------------|--------|-----------|------------------------------------------------------------------------------------|
 | fileName   | STRING | YES       | A valid fileName (in /var/logs) on the local server.                               |
 | numEntries | NUMBER | NO        | Number of log lines/entries to retrieve.                                           |
-| keyword    | STRING | NO        | An encoded string to search in the log file                                        |
+| keyword    | STRING | NO        | An encoded case-sensitive string to search in the log file                         |
 | serverUrls | STRING | NO        | Comma separated list of server URLs. These servers must be running the application |
 
-**Data Source:**
-Filesystem
+### Data Source:
+Filesystem OR a Secondary Server REST Endpoint
 
-**Response:**
+### Response:
 
-Response format: application/json
+Format: `application/json`
 
-Sample Response:
+#### Sample Templates:
+
+Success:
 ```json
-[
-    {
-        "serverUrl": "http://localhost:3000",
-        "fileName": "system.log",
-        "logs": [
-            "Feb 16 18:42:41 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
-            "Feb 16 18:41:41 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config",
-            "Feb 16 18:40:41 MacBook-Pro csc_iseagentd[1143]: Function: loadXMLCfgFile Thread Id: 0xDF55D000 File: ConfigData.cpp Line: 43 Level: info :: ISEPostureCFG.xml present. Using it for config"
-        ]
-    },
-    {
-        "serverUrl": "http://192.168.0.122:3000",
-        "fileName": "system.log",
-        "logs": [
-            "[   33.593532] kernel: Bluetooth: SCO socket layer initialized",
-            "[   33.593528] kernel: Bluetooth: L2CAP socket layer initialized",
-            "[   33.593525] kernel: Bluetooth: HCI socket layer initialized"
-        ]
-    }
-]
+{
+  "serverUrl": "<SERVER_URL>",
+  "fileName": "<FILE_NAME>",
+  "httpStatus": "<HTTP STATUS FOR THE CURRENT PAYLOAD>",
+  "logs": [
+    "<LOG LINE 1>",
+    "<LOG LINE 2>"
+  ]
+}
+```
+Logs are ordered from latest to oldest.
+
+Error:
+```json
+{
+  "serverUrl": "<SERVER_URL>",
+  "fileName": "<FILE_NAME>",
+  "httpStatus": "<HTTP STATUS FOR THE CURRENT PAYLOAD>",
+  "errors": [
+    "<ERROR MESSAGE 1>",
+    "<ERROR MESSAGE 2>"
+  ]
+}
 ```
 
-Happy Path:
+### Sample Scenarios:
+##### Happy Paths:
 Input | Status | Status Code | Output/Error Message
 ------------ | ------------ | ------------ | ------------
 Valid fileName | Success | 200 | Complete logs of the file (latest to old).
@@ -117,9 +123,9 @@ Valid fileName, Valid numEntries | Success | 200 | Most Recent 'numEntries' line
 Valid fileName, Valid numEntries, Valid (URL encoded) keyword | Success | 200 | Most recent 'numEntries' lines of the file containing the keyword/text.
 Valid fileName, Valid numEntries, Valid (URL encoded) keyword, Valid serverURLs | Success | 200 | Most recent 'numEntries' lines of the file containing the keyword/text for each serverURL
 Valid fileName, Valid numEntries, Valid (URL encoded) keyword, Partially reachable/valid serverURLs | Success | 200 | Combination of success and error messages based on the response for each serverURL.
+<br>
 
-
-Errors:
+##### Error Paths:
 Input | Status | Status Code | Output/Error Message
 ------------ | ------------ | ------------ | ------------
 Missing fileName | Error | 400 | File name cannot be empty.

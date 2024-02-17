@@ -1,75 +1,59 @@
 const httpStatus = require('http-status-codes');
 const {
     FILE_DOES_NOT_EXIST,
-    INTERNAL_SERVER_ERROR,
-    REQUEST_TIMED_OUT,
-    FILE_STREAM_READ_ERROR,
-    FILE_STREAM_CREATE_ERROR
+    FILE_STREAM_CREATE_ERROR,
+    REQUEST_TIMED_OUT
 } = require("./errorMessages");
 
 //Error classes for internal error handling
-class FileDoesNotExistError extends Error {
-    constructor() {
-        super(FILE_DOES_NOT_EXIST);
-        this.httpStatus = httpStatus.NOT_FOUND;
-    }
-}
-
-class FileStreamReadError extends Error {
-    constructor() {
-        super(FILE_STREAM_READ_ERROR);
-        this.httpStatus = httpStatus.INTERNAL_SERVER_ERROR;
-    }
-}
-
-class FileStreamCreateError extends Error {
-    constructor() {
-        super(FILE_STREAM_CREATE_ERROR);
-        this.httpStatus = httpStatus.INTERNAL_SERVER_ERROR;
-    }
-}
-
-class ReadLineInterfaceError extends Error {
-    constructor() {
-        super(INTERNAL_SERVER_ERROR);
-        this.httpStatus = httpStatus.INTERNAL_SERVER_ERROR;
-    }
-}
-
-class RequestFailedError extends Error {
-    constructor(message, httpStatus) {
+class BaseError extends Error {
+    constructor(message, httpStatusCode) {
         super(message);
-        this.httpStatus = httpStatus;
+        this.httpStatus = httpStatusCode || httpStatus.INTERNAL_SERVER_ERROR;
+    }
+
+    toJSON() {
+        return {
+            message: this.message
+        };
     }
 }
 
-class RequestTimeoutError extends Error {
+class FileDoesNotExistError extends BaseError {
     constructor() {
-        super(REQUEST_TIMED_OUT);
-        this.httpStatus = httpStatus.REQUEST_TIMEOUT;
+        super(FILE_DOES_NOT_EXIST, httpStatus.NOT_FOUND);
     }
 }
 
-class ResponseDataParseError extends Error {
+class FileStreamCreateError extends BaseError {
+    constructor() {
+        super(FILE_STREAM_CREATE_ERROR, httpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
+
+class RequestFailedError extends BaseError {
+    constructor(message, httpStatusCode) {
+        super(message, httpStatusCode);
+    }
+}
+
+class RequestTimeoutError extends BaseError {
+    constructor() {
+        super(REQUEST_TIMED_OUT, httpStatus.REQUEST_TIMEOUT);
+    }
+}
+
+class ValidationError extends BaseError {
     constructor(message) {
-        super(message);
-    }
-}
-
-class ValidationError extends Error {
-    constructor(message, httpStatus) {
-        super(message);
-        this.httpStatus = httpStatus;
+        super(message, httpStatus.BAD_REQUEST);
     }
 }
 
 module.exports = {
     FileDoesNotExistError,
     FileStreamCreateError,
-    FileStreamReadError,
-    ReadLineInterfaceError,
-    ResponseDataParseError,
     RequestFailedError,
     RequestTimeoutError,
     ValidationError
 };
+

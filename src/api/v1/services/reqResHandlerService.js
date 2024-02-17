@@ -4,6 +4,7 @@ const httpStatus = require("http-status-codes");
 const {SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS} = require("../../utils/constants");
 const {RequestTimeoutError, RequestFailedError} = require("../../errors/errorClasses");
 const logger = require('../../../../src/api/utils/logger');
+const errorHandlerService = require('../services/errorHandlerService');
 
 async function handleResponse(res) {
     if (res.statusCode !== httpStatus.OK) {
@@ -25,14 +26,18 @@ function makeRequest(requestUrl) {
 
         req.on('error', (err) => {
             logger.log(err.message, 'error');
-            reject(new RequestFailedError(err.message));
-        });
-
-        req.setTimeout(SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS, () => {
-            req.destroy();
-            reject(new RequestTimeoutError());
-        });
+            reject(new RequestFailedError(errorHandlerService.getErrorMessage(err.code)));
     });
+
+
+    req.setTimeout(SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS, () => {
+        req.destroy();
+        reject(new RequestTimeoutError());
+    });
+}
+
+)
+;
 }
 
 module.exports = {

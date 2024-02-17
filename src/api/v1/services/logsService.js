@@ -10,11 +10,14 @@ const SingleResponseStreamTransform = require("../transforms/SingleResponseStrea
 const MultiResponseStreamTransform = require("../transforms/MulitResponseStreamTransform");
 const errorHandlerService = require('../services/errorHandlerService');
 
+async function handleErrors(err, fileName, serverUrl) {
+    return errorHandlerService.getErrorStream(err).pipe(new SingleResponseStreamTransform(fileName, serverUrl, "errors", err.httpStatus));
+}
+
 async function getRemoteLogs(serverUrl, fileName, numEntries, keyword) {
     const requestUrl = new url.URL(LOGS_API_ENDPOINT_V1, serverUrl);
     requestUrl.searchParams.set('fileName', fileName);
 
-    //setting params required to make request to secondary log servers
     if (numEntries !== undefined) {
         requestUrl.searchParams.set('numEntries', numEntries);
     }
@@ -25,7 +28,7 @@ async function getRemoteLogs(serverUrl, fileName, numEntries, keyword) {
     try {
         return await reqResHandlerService.makeRequest(requestUrl);
     } catch (err) {
-        return errorHandlerService.getErrorStream(err).pipe(new SingleResponseStreamTransform(fileName, serverUrl, "error"));
+        return handleErrors(err, fileName, serverUrl);
     }
 }
 
@@ -35,38 +38,29 @@ async function getLocalLogs(fileName, numEntries, keyword) {
     try {
         const logsStream = await fileOperations.readFileInReverse(filePath, numEntries, keyword);
         return logsStream.pipe(new SingleResponseStreamTransform(fileName, null, "logs"));
-
     } catch (err) {
-        return errorHandlerService.getErrorStream(err).pipe(new SingleResponseStreamTransform(fileName, null, "error"))
+        return handleErrors(err, fileName, null);
     }
 }
 
-/* go over every serverUrl in the request,
-     if the url is local -> read local logs
-    else make request to each of the secondary servers
-*/
 exports.getLogs = async ({serverUrls, fileName, numEntries, keyword}) => {
     let serverUrlsArray = serverUrls ? serverUrls.split(',') : [];
 
-    // If no serverUrls, return local logs
     if (serverUrlsArray.length === 0) {
         return getLocalLogs(fileName, numEntries, keyword);
     }
 
     let uniqueServerUrls = Array.from(new Set(serverUrlsArray));
-    const logStreamPromiseArray = uniqueServerUrls.map(async (url, index) => {
-        let logStream;
+    const logStreamPromises = uniqueServerUrls.map((url) => {
         if (url === CURRENT_SERVER_URL) {
-            logStream = await getLocalLogs(fileName, numEntries, keyword);
+            return getLocalLogs(fileName, numEntries, keyword);
         } else {
-            logStream = await getRemoteLogs(url, fileName, numEntries, keyword);
+            return getRemoteLogs(url, fileName, numEntries, keyword);
         }
-
-        // format the logStream data using MultiResponseStreamTransform
-        return logStream.pipe(new MultiResponseStreamTransform(index, uniqueServerUrls.length));
-
     });
 
-    // combining all resolved promise array streams to a multistream
-    return new Multistream(await Promise.all(logStreamPromiseArray));
+    const logStreams = await Promise.all(logStreamPromises);
+    const transformedStreams = logStreams.map((logStream, index) => logStream.pipe(new MultiResponseStreamTransform(index, uniqueServerUrls.length)));
+
+    return new Multistream(transformedStreams);
 };

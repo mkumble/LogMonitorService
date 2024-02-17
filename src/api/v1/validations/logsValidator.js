@@ -3,10 +3,10 @@ const url = require('url')
 
 const {
     FILE_NAME_CANNOT_BE_EMPTY,
-    INVALID_SERVER_URL,
+    INVALID_SECONDARY_SERVER_URL_HOST_NAME,
     PATH_NOT_ALLOWED_IN_FILE_NAME,
     NUM_ENTRIES_MUST_BE_A_NUMBER,
-    NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO
+    NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO, INVALID_SECONDARY_SERVER_URL_PORT
 } = require('../../errors/errorMessages');
 const errorHandlerService = require('../services/errorHandlerService');
 const {
@@ -18,13 +18,13 @@ function validateFileName(req, res, next) {
     const fileName = req.query.fileName;
 
     if (!fileName) {
-        let responseMessage = errorHandlerService.getResponse(null, new ValidationError(FILE_NAME_CANNOT_BE_EMPTY, httpStatus.NOT_FOUND));
+        let responseMessage = errorHandlerService.getResponse(null, new ValidationError(FILE_NAME_CANNOT_BE_EMPTY));
         return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
     }
 
     // validate filename for invalid/malicious paths
     if (fileName.includes('/') || fileName.includes('..')) {
-        let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(PATH_NOT_ALLOWED_IN_FILE_NAME, httpStatus.BAD_REQUEST));
+        let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(PATH_NOT_ALLOWED_IN_FILE_NAME));
         return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
     }
 
@@ -44,12 +44,12 @@ function validateNumEntries(req, res, next) {
     numEntries = Number(numEntries);
 
     if (isNaN(numEntries)) {
-        let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(NUM_ENTRIES_MUST_BE_A_NUMBER, httpStatus.BAD_REQUEST));
+        let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(NUM_ENTRIES_MUST_BE_A_NUMBER));
         return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
     }
 
     if (numEntries < 1) {
-        let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO, httpStatus.BAD_REQUEST));
+        let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO));
         return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
     }
 
@@ -73,16 +73,22 @@ function validateServerUrls(req, res, next) {
 
     for (let serverUrl of serverUrls) {
         try {
-            new url.URL(serverUrl);
+            const urlObj = new url.URL(serverUrl);
+            if (!urlObj.port) {
+                // If port is not specified, then the URL is not valid
+                let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(INVALID_SECONDARY_SERVER_URL_PORT + ": " + serverUrl));
+                return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
+            }
         } catch (err) {
             // If error is thrown, then the URL is not valid
-            let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(INVALID_SERVER_URL + ":" + serverUrl, httpStatus.BAD_REQUEST));
+            let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(INVALID_SECONDARY_SERVER_URL_HOST_NAME + ": " + serverUrl));
             return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
         }
     }
 
     next();
 }
+
 
 module.exports = {
     validateFileName,

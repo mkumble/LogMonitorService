@@ -71,7 +71,7 @@ describe('GET /logs', function () {
 
     it('responds with error for non-existent file', function(done) {
         const invalidFileName = 'non-existent-file.log';
-        const expectedErrorStream = errorHandlerService.getErrorStream(new FileDoesNotExistError()).pipe(new ResponseTransform(invalidFileName, null, "error"))
+        const expectedErrorStream = errorHandlerService.getErrorStream(new FileDoesNotExistError()).pipe(new ResponseTransform(invalidFileName, null, "errors"))
 
         let expectedData = '';
         expectedErrorStream.on('data', chunk => {
