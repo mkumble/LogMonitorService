@@ -9,7 +9,7 @@ const {
 class BaseError extends Error {
     constructor(message, httpStatusCode) {
         super(message);
-        this.httpStatus = httpStatusCode || httpStatus.INTERNAL_SERVER_ERROR;
+        this.httpStatusCode = httpStatusCode || httpStatus.INTERNAL_SERVER_ERROR;
     }
 
     toJSON() {

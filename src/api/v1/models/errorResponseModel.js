@@ -4,7 +4,7 @@ const {CURRENT_SERVER_URL} = require("../../utils/constants");
 /*
 Build a response payload with
 - server
-- httpStatus
+- httpStatusCode
 - fileName
 - logs or error message
 for each serverUrl request
@@ -12,7 +12,7 @@ for each serverUrl request
 function getErrorResponse(fileName, error, serverUrl) {
     let errorResponse = {
         serverUrl: CURRENT_SERVER_URL,
-        httpStatus: httpStatus.INTERNAL_SERVER_ERROR
+        httpStatusCode: httpStatus.INTERNAL_SERVER_ERROR
     };
 
     if (serverUrl) {
@@ -25,7 +25,7 @@ function getErrorResponse(fileName, error, serverUrl) {
 
     if (error) {
         errorResponse.error = error.message;
-        errorResponse.httpStatus = error.httpStatus;
+        errorResponse.httpStatusCode = error.httpStatusCode;
     }
 
     return errorResponse;

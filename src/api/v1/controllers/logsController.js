@@ -12,6 +12,6 @@ exports.getLogsFromServers = async (req, res) => {
     } catch (err) {
         errorResponse = errorHandlerService.getResponse(err);
         //responses from secondary servers have the http status set as part of the payload
-        res.status(errorResponse.httpStatus).send(errorResponse);
+        res.status(errorResponse.httpStatusCode).send(errorResponse);
     }
 };
