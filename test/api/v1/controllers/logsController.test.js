@@ -89,7 +89,8 @@ describe('GET /logs', function () {
 
     it('responds with error for non-existent file', function (done) {
         const invalidFileName = 'non-existent-file.log';
-        const expectedErrorStream = errorHandlerService.getErrorStream(new FileDoesNotExistError()).pipe(new ResponseTransform(invalidFileName, null, "error"))
+        const error = new FileDoesNotExistError();
+        const expectedErrorStream = errorHandlerService.getErrorStream(error).pipe(new ResponseTransform(invalidFileName, null, "errors", error.httpStatusCode))
 
         let expectedData = '';
         expectedErrorStream.on('data', chunk => {
@@ -149,14 +150,15 @@ describe('GET /logs', function () {
 
     it('responds with error for invalid numEntries(NaN)', function (done) {
         const validFileName = 'system.log';
-        const error = errorHandlerService.getResponse(validFileName, new ValidationError(NUM_ENTRIES_MUST_BE_A_NUMBER))
+        const error = new ValidationError(NUM_ENTRIES_MUST_BE_A_NUMBER);
+        const errorResponse = errorHandlerService.getResponse(validFileName, error);
 
         chai.request(app)
             .get(LOGS_API_ENDPOINT_V1)
             .query({fileName: validFileName, numEntries: 'test'})
             .end(function (err, res) {
-                expect(res).to.have.status(httpStatus.BAD_REQUEST);
-                expect(res.body).to.deep.equal(error);
+                expect(res).to.have.status(error.httpStatusCode);
+                expect(res.body).to.deep.equal(errorResponse);
                 done();
             });
     });
