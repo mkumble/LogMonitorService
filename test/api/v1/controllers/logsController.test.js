@@ -3,7 +3,11 @@ const chaiHttp = require('chai-http');
 const httpStatus = require('http-status-codes');
 const sinon = require('sinon');
 const app = require('../../../../src/app');
-const {NUM_ENTRIES_MUST_BE_A_NUMBER, PATH_NOT_ALLOWED_IN_FILE_NAME, NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO} = require('../../../../src/api/errors/errorMessages');
+const {
+    NUM_ENTRIES_MUST_BE_A_NUMBER,
+    PATH_NOT_ALLOWED_IN_FILE_NAME,
+    NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO
+} = require('../../../../src/api/errors/errorMessages');
 const {LOGS_API_ENDPOINT_V1} = require('../../../../src/api/utils/apiEndpoints');
 const errorHandlerService = require("../../../../src/api/v1/services/errorHandlerService");
 const {FileDoesNotExistError, ValidationError} = require("../../../../src/api/errors/errorClasses");
@@ -25,11 +29,13 @@ describe('GET /logs', function () {
 
     it('should pass validation and controller should return expected response if fileName is valid (file exists)', function (done) {
         const validFileName = 'system.log';
-        const expectedResponse = {"serverUrl": "http://localhost:3000",
+        const expectedResponse = {
+            "serverUrl": "http://localhost:3000",
             "fileName": "test",
             "logs": [
                 "Log entry"
-            ]}
+            ]
+        }
         //assume getLogs returns a valid stream
         const logsStream = new Readable({
             read() {
@@ -53,11 +59,13 @@ describe('GET /logs', function () {
 
     it('should pass validation if numEntries is valid', function (done) {
         const validFileName = 'system.log';
-        const expectedResponse = {"serverUrl": "http://localhost:3000",
+        const expectedResponse = {
+            "serverUrl": "http://localhost:3000",
             "fileName": "test",
             "logs": [
                 "Log entry"
-            ]}
+            ]
+        }
         //assume getLogs returns a valid stream
         const logsStream = new Readable({
             read() {
@@ -79,7 +87,7 @@ describe('GET /logs', function () {
             });
     });
 
-    it('responds with error for non-existent file', function(done) {
+    it('responds with error for non-existent file', function (done) {
         const invalidFileName = 'non-existent-file.log';
         const expectedErrorStream = errorHandlerService.getErrorStream(new FileDoesNotExistError()).pipe(new ResponseTransform(invalidFileName, null, "error"))
 
@@ -124,7 +132,7 @@ describe('GET /logs', function () {
     });
 
 
-    it('responds with error for invalid numEntries(<1)', function(done) {
+    it('responds with error for invalid numEntries(<1)', function (done) {
         const validFileName = 'system.log';
         const error = errorHandlerService.getResponse(validFileName, new ValidationError(NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO))
 

@@ -27,7 +27,7 @@ function makeRequest(requestUrl) {
         req.on('error', (err) => {
             logger.log(err.message, 'error');
             reject(new RequestFailedError(errorHandlerService.getErrorMessage(err.code)));
-    });
+        });
 
 
         req.setTimeout(SECONDARY_SERVER_REQUEST_TIMEOUT_MILLIS, () => {
