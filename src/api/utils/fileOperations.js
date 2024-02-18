@@ -4,7 +4,7 @@ const logger = require('./logger');
 const constants = require('./constants')
 const {FileDoesNotExistError, FileStreamCreateError} = require('../errors/errorClasses');
 const {FILE_STREAM_CREATE_ERROR} = require("../errors/errorMessages");
-const LogsTransform = require("../v1/transforms/LogsStreamTransform");
+const LogsStreamTransform = require("../v1/transforms/LogsStreamTransform");
 
 //handles reading fileStream data, throws FileStream error if reading fails
 function readFileInReverse(filePath, numEntries, keyword) {
@@ -23,7 +23,7 @@ function readFileInReverse(filePath, numEntries, keyword) {
             return;
         }
 
-        const logStream = fileStream.pipe(new LogsTransform(numEntries, keyword));
+        const logStream = fileStream.pipe(new LogsStreamTransform(numEntries, keyword));
         resolve(logStream);
     });
 }

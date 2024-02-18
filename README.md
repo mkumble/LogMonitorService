@@ -12,7 +12,7 @@ Detailed information about the requirements, design, and architecture of this se
 4. logsService: Creates streams either from the local logs and/or remote logs based on the serverUrls. 
      i. Local logs: 
          a. fileOperations utility is used to read the local logs data asynchronously to a stream. 
-         b. The stream is filtered based on the criteria using the LogsTransform class.
+         b. The stream is filtered based on the criteria using the LogsStreamTransform class.
          c. The stream is then formatted as JSON using the SingleResponseStreamTransform class.
      ii. Remote logs:
          a. Using the reqResHandlerService, a request is made for each of the serverUrls along with the search criteria. 
