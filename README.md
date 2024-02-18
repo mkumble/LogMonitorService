@@ -255,7 +255,7 @@ curl "http://localhost:3000/api/v1/logs?fileName=system.log&numEntries=5&keyword
     {
         "serverUrl": "http://localhost:3001",
         "fileName": "system.log",
-        "error": []
+        "errors": []
     },
     {
         "serverUrl": "http://localhost:3000",
