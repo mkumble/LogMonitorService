@@ -11,7 +11,7 @@ Detailed information about the requirements, design, and architecture of this se
 3. logsController Ingress: Invokes the logService module for the request.
 4. logsService: Creates streams either from the local logs and/or remote logs based on the serverUrls. 
      i. Local logs: 
-         a. fileOperations utility is used to read the local logs data asynchronously to a stream. 
+         a. logFileOperations utility is used to read the local logs data asynchronously to a stream. 
          b. The stream is filtered based on the criteria using the LogsStreamTransform class.
          c. The stream is then formatted as JSON using the SingleResponseStreamTransform class.
      ii. Remote logs:
