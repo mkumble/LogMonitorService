@@ -5,7 +5,7 @@ const {expect} = chai;
 
 const {
     FILE_NAME_CANNOT_BE_EMPTY,
-    INVALID_SERVER_URL,
+    INVALID_SECONDARY_SERVER_URL_HOST_NAME,
     PATH_NOT_ALLOWED_IN_FILE_NAME,
     NUM_ENTRIES_MUST_BE_A_NUMBER,
     NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO
@@ -33,7 +33,7 @@ describe('validateRequest', () => {
     it('should return error if fileName is empty', () => {
         logsValidator.validateFileName(req, res, next);
         expect(res.status.calledWith(httpStatus.BAD_REQUEST)).to.be.true;
-        const responseMessage = errorHandlerService.getResponse(null, new ValidationError(FILE_NAME_CANNOT_BE_EMPTY, httpStatus.NOT_FOUND));
+        const responseMessage = errorHandlerService.getResponse(null, new ValidationError(FILE_NAME_CANNOT_BE_EMPTY));
         expect(res.send.calledWith(responseMessage)).to.be.true;
     });
 
@@ -41,7 +41,7 @@ describe('validateRequest', () => {
         req.query.fileName = 'test/';
         logsValidator.validateFileName(req, res, next);
         expect(res.status.calledWith(httpStatus.BAD_REQUEST)).to.be.true;
-        const responseMessage = errorHandlerService.getResponse(req.query.fileName, new ValidationError(PATH_NOT_ALLOWED_IN_FILE_NAME, httpStatus.BAD_REQUEST));
+        const responseMessage = errorHandlerService.getResponse(req.query.fileName, new ValidationError(PATH_NOT_ALLOWED_IN_FILE_NAME));
         expect(res.send.calledWith(responseMessage)).to.be.true;
     });
 
@@ -49,7 +49,7 @@ describe('validateRequest', () => {
         req.query.fileName = 'test..';
         logsValidator.validateFileName(req, res, next);
         expect(res.status.calledWith(httpStatus.BAD_REQUEST)).to.be.true;
-        const responseMessage = errorHandlerService.getResponse(req.query.fileName, new ValidationError(PATH_NOT_ALLOWED_IN_FILE_NAME, httpStatus.BAD_REQUEST));
+        const responseMessage = errorHandlerService.getResponse(req.query.fileName, new ValidationError(PATH_NOT_ALLOWED_IN_FILE_NAME));
         expect(res.send.calledWith(responseMessage)).to.be.true;
     });
 
@@ -69,7 +69,7 @@ describe('validateRequest', () => {
         req.query.numEntries = 'test';
         logsValidator.validateNumEntries(req, res, next);
         expect(res.status.calledWith(httpStatus.BAD_REQUEST)).to.be.true;
-        const responseMessage = errorHandlerService.getResponse(null, new ValidationError(NUM_ENTRIES_MUST_BE_A_NUMBER, httpStatus.BAD_REQUEST));
+        const responseMessage = errorHandlerService.getResponse(null, new ValidationError(NUM_ENTRIES_MUST_BE_A_NUMBER));
         expect(res.send.calledWith(responseMessage)).to.be.true;
     });
 
@@ -77,7 +77,7 @@ describe('validateRequest', () => {
         req.query.numEntries = '0';
         logsValidator.validateNumEntries(req, res, next);
         expect(res.status.calledWith(httpStatus.BAD_REQUEST)).to.be.true;
-        const responseMessage = errorHandlerService.getResponse(null, new ValidationError(NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO, httpStatus.BAD_REQUEST));
+        const responseMessage = errorHandlerService.getResponse(null, new ValidationError(NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO));
         expect(res.send.calledWith(responseMessage)).to.be.true;
     });
 
@@ -96,7 +96,7 @@ describe('validateRequest', () => {
         req.query.serverUrls = 'invalid-url';
         logsValidator.validateServerUrls(req, res, next);
         expect(res.status.calledWith(httpStatus.BAD_REQUEST)).to.be.true;
-        const responseMessage = errorHandlerService.getResponse(req.query.fileName, new ValidationError(INVALID_SERVER_URL + ":" + req.query.serverUrls, httpStatus.BAD_REQUEST));
+        const responseMessage = errorHandlerService.getResponse(req.query.fileName, new ValidationError(INVALID_SECONDARY_SERVER_URL_HOST_NAME + ": " + req.query.serverUrls));
         expect(res.send.calledWith(responseMessage)).to.be.true;
     });
 

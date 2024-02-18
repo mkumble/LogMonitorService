@@ -23,12 +23,17 @@ describe('GET /logs', function () {
         }
     });
 
-    it('should pass validation if fileName is valid (file exists)', function (done) {
+    it('should pass validation and controller should return expected response if fileName is valid (file exists)', function (done) {
         const validFileName = 'system.log';
+        const expectedResponse = {"serverUrl": "http://localhost:3000",
+            "fileName": "test",
+            "logs": [
+                "Log entry"
+            ]}
+        //assume getLogs returns a valid stream
         const logsStream = new Readable({
             read() {
-                this.push('Log entry 1\n');
-                this.push('Log entry 2\n');
+                this.push(JSON.stringify(expectedResponse));
                 this.push(null); // No more data
             }
         });
@@ -41,17 +46,22 @@ describe('GET /logs', function () {
             .query({fileName: validFileName})
             .end(function (err, res) {
                 expect(res).to.have.status(httpStatus.OK);
-                expect(res.text).to.equal('Log entry 1\nLog entry 2\n');
+                expect(JSON.parse(res.text)).to.deep.equal(expectedResponse);
                 done();
             });
     });
 
     it('should pass validation if numEntries is valid', function (done) {
         const validFileName = 'system.log';
+        const expectedResponse = {"serverUrl": "http://localhost:3000",
+            "fileName": "test",
+            "logs": [
+                "Log entry"
+            ]}
+        //assume getLogs returns a valid stream
         const logsStream = new Readable({
             read() {
-                this.push('Log entry 1\n');
-                this.push('Log entry 2\n');
+                this.push(JSON.stringify(expectedResponse));
                 this.push(null); // No more data
             }
         });
@@ -64,7 +74,7 @@ describe('GET /logs', function () {
             .query({fileName: validFileName, numEntries: 4})
             .end(function (err, res) {
                 expect(res).to.have.status(httpStatus.OK);
-                expect(res.text).to.equal('Log entry 1\nLog entry 2\n');
+                expect(JSON.parse(res.text)).to.deep.equal(expectedResponse);
                 done();
             });
     });
@@ -101,7 +111,7 @@ describe('GET /logs', function () {
 
     it('responds with error for invalid file name', function (done) {
         const invalidFileName = '../secrets.txt';
-        const error = errorHandlerService.getResponse(invalidFileName, new ValidationError(PATH_NOT_ALLOWED_IN_FILE_NAME, httpStatus.BAD_REQUEST))
+        const error = errorHandlerService.getResponse(invalidFileName, new ValidationError(PATH_NOT_ALLOWED_IN_FILE_NAME))
 
         chai.request(app)
             .get(LOGS_API_ENDPOINT_V1)
@@ -116,7 +126,7 @@ describe('GET /logs', function () {
 
     it('responds with error for invalid numEntries(<1)', function(done) {
         const validFileName = 'system.log';
-        const error = errorHandlerService.getResponse(validFileName, new ValidationError(NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO, httpStatus.BAD_REQUEST))
+        const error = errorHandlerService.getResponse(validFileName, new ValidationError(NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO))
 
         chai.request(app)
             .get(LOGS_API_ENDPOINT_V1)
@@ -131,7 +141,7 @@ describe('GET /logs', function () {
 
     it('responds with error for invalid numEntries(NaN)', function (done) {
         const validFileName = 'system.log';
-        const error = errorHandlerService.getResponse(validFileName, new ValidationError(NUM_ENTRIES_MUST_BE_A_NUMBER, httpStatus.BAD_REQUEST))
+        const error = errorHandlerService.getResponse(validFileName, new ValidationError(NUM_ENTRIES_MUST_BE_A_NUMBER))
 
         chai.request(app)
             .get(LOGS_API_ENDPOINT_V1)
