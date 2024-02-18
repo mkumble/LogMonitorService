@@ -4,7 +4,7 @@ const fs = require('fs');
 const stream = require('stream');
 const expect = chai.expect;
 
-const fileOperations = require('../../../../src/api/utils/fileOperations');
+const logFileOperations = require('../../../../src/api/utils/logFileOperations');
 const {FileDoesNotExistError} = require("../../../../src/api/errors/errorClasses");
 const httpStatus = require("http-status-codes");
 
@@ -48,7 +48,7 @@ describe('readFileInReverse', () => {
             });
             createReadStreamMock.returns(readableStream);
 
-            const logsStream = await fileOperations.readFileInReverse('filePath', numEntries, keyword);
+            const logsStream = await logFileOperations.readFileInReverse('filePath', numEntries, keyword);
 
             let data = '';
             for await (const chunk of logsStream) {
@@ -93,7 +93,7 @@ describe('readFileInReverse', () => {
             sinon.stub(fs, 'existsSync').returns(false);
 
             try {
-                await fileOperations.readFileInReverse(filePath, numEntries, keyword);
+                await logFileOperations.readFileInReverse(filePath, numEntries, keyword);
             } catch (err) {
                 expect(err).to.be.an.instanceof(FileDoesNotExistError);
             }

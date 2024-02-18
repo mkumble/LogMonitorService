@@ -3,7 +3,7 @@ const url = require("url");
 const Multistream = require('multistream');
 
 const {LOG_FILES_BASE_PATH, CURRENT_SERVER_URL} = require("../../utils/constants");
-const fileOperations = require("../../utils/fileOperations");
+const logFileOperations = require("../../utils/logFileOperations");
 const {LOGS_API_ENDPOINT_V1} = require("../../utils/apiEndpoints");
 const reqResHandlerService = require("./reqResHandlerService");
 const SingleResponseStreamTransform = require("../transforms/SingleResponseStreamTransform");
@@ -38,7 +38,7 @@ async function getLocalLogs(fileName, numEntries, keyword) {
     const filePath = path.join(LOG_FILES_BASE_PATH, fileName);
 
     try {
-        const logsStream = await fileOperations.readFileInReverse(filePath, numEntries, keyword);
+        const logsStream = await logFileOperations.readFileInReverse(filePath, numEntries, keyword);
         return logsStream.pipe(new SingleResponseStreamTransform(fileName, null, "logs"));
     } catch (err) {
         return handleErrors(err, fileName, null);
