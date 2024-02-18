@@ -4,6 +4,7 @@ const url = require('url')
 const {
     FILE_NAME_CANNOT_BE_EMPTY,
     INVALID_SECONDARY_SERVER_URL_HOST_NAME,
+    INVALID_SECONDARY_SERVER_URL_PORT,
     PATH_NOT_ALLOWED_IN_FILE_NAME,
     NUM_ENTRIES_MUST_BE_A_NUMBER,
     NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO
@@ -73,7 +74,12 @@ function validateServerUrls(req, res, next) {
 
     for (let serverUrl of serverUrls) {
         try {
-            new url.URL(serverUrl);
+            const urlObject = new url.URL(serverUrl);
+            if (!urlObject.port) {
+                // If port is not specified, then the URL is not valid
+                let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(INVALID_SECONDARY_SERVER_URL_PORT + ": " + serverUrl));
+                return res.status(httpStatus.BAD_REQUEST).send(responseMessage);
+            }
         } catch (err) {
             // If error is thrown, then the URL is not valid
             let responseMessage = errorHandlerService.getResponse(fileName, new ValidationError(INVALID_SECONDARY_SERVER_URL_HOST_NAME + ": " + serverUrl));
