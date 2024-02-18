@@ -8,7 +8,7 @@ const {
     INVALID_SECONDARY_SERVER_URL_HOST_NAME,
     PATH_NOT_ALLOWED_IN_FILE_NAME,
     NUM_ENTRIES_MUST_BE_A_NUMBER,
-    NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO
+    NUM_ENTRIES_MUST_BE_GREATER_THAN_ZERO, INVALID_SECONDARY_SERVER_URL_PORT
 } = require('../../../../src/api/errors/errorMessages');
 const logsValidator = require('../../../../src/api/v1/validations/logsValidator');
 const errorHandlerService = require("../../../../src/api/v1/services/errorHandlerService");
@@ -100,8 +100,16 @@ describe('validateRequest', () => {
         expect(res.send.calledWith(responseMessage)).to.be.true;
     });
 
+    it('should return error if serverUrl port is invalid', () => {
+        req.query.serverUrls = 'http://localhostl';
+        logsValidator.validateServerUrls(req, res, next);
+        expect(res.status.calledWith(httpStatus.BAD_REQUEST)).to.be.true;
+        const responseMessage = errorHandlerService.getResponse(req.query.fileName, new ValidationError(INVALID_SECONDARY_SERVER_URL_PORT + ": " + req.query.serverUrls));
+        expect(res.send.calledWith(responseMessage)).to.be.true;
+    });
+
     it('should call next if serverUrls is valid', () => {
-        req.query.serverUrls = 'https://www.test.com';
+        req.query.serverUrls = 'https://www.test.com:3000';
         logsValidator.validateServerUrls(req, res, next);
         expect(next.calledOnce).to.be.true;
     });
