@@ -30,7 +30,7 @@ describe('FileReader', function () {
         existsSyncStub.returns(true);
         openSyncStub.returns(123);
         statSyncStub.returns({size: mockDataBuffer.length});
-        readSyncStub.callsFake((fd, buffer, offset, length, position) => {
+        readSyncStub.callsFake((fd, buffer, offset) => {
             mockDataBuffer.copy(buffer, offset, 0, mockDataBuffer.length);
             // return the number of bytes read
             return mockDataBuffer.length;

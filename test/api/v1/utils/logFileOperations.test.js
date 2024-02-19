@@ -6,7 +6,6 @@ const expect = chai.expect;
 
 const logFileOperations = require('../../../../src/api/utils/logFileOperations');
 const {FileDoesNotExistError} = require("../../../../src/api/errors/errorClasses");
-const httpStatus = require("http-status-codes");
 
 describe('readFileInReverse', () => {
         let existsSyncStub, openSyncStub, statSyncStub, readSyncStub, closeSyncStub;
@@ -31,7 +30,7 @@ describe('readFileInReverse', () => {
             const mockDataBuffer = Buffer.from(mockData);
             existsSyncStub.returns(true);
             statSyncStub.returns({size: mockDataBuffer.length});
-            readSyncStub.callsFake((fd, buffer, offset, length, position) => {
+            readSyncStub.callsFake((fd, buffer, offset) => {
                 mockDataBuffer.copy(buffer, offset, 0, mockDataBuffer.length);
                 // return the number of bytes read
                 return mockDataBuffer.length;
@@ -59,13 +58,12 @@ describe('readFileInReverse', () => {
 
         async function testReadFileInReverse(mockData, numEntries, keyword) {
             const expectedData = getExpectedData(mockData, numEntries, keyword);
-            const readableStream = new stream.Readable({
+            new stream.Readable({
                 read() {
                     this.push(mockData);
                     this.push(null);
                 }
             });
-
             const logsStream = await logFileOperations.readFileInReverse('filePath', numEntries, keyword);
 
             let data = '';

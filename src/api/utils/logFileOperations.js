@@ -1,5 +1,3 @@
-const fs = require('fs');
-
 const logger = require('./logger');
 const constants = require('./constants')
 const LogsStreamTransform = require("../v1/transforms/LogsStreamTransform");
