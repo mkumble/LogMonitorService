@@ -10,7 +10,6 @@ const constants = require('./constants')
 //Reads can be stopped by calling the stopReadingEvent on the stream.
 class FileReader extends Readable {
     constructor(path, reversedRead, options) {
-
         if (!fs.existsSync(path)) {
             throw new FileDoesNotExistError();
         }
@@ -33,7 +32,6 @@ class FileReader extends Readable {
         //lines that will be sent to Consumer during the next _read call
         this.linesToProcess = [];
     }
-
 
     //Updates the 'lines' input array with the lines read and returns the number of bytes read
     readLines(readPosition, readLengthBytes, lines) {
@@ -95,7 +93,6 @@ class FileReader extends Readable {
 
             //update partial line for current iteration
             this.partialLine = this.linesToProcess.shift();
-
 
             if (this.linesToProcess.length === 0 && this.currentReadPosition <= 0) {
                 this.sendPartialLineAndCloseStream();
