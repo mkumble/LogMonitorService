@@ -1,6 +1,7 @@
 //module for storing re-usable constants
 module.exports = {
     CONTENT_TYPE_APPLICATION_JSON: 'application/json',
+    FILE_READ_BUFFER_SIZE: 1024,
     LOG_FILES_BASE_PATH: '/var/log',
     // protocol will be https in a prod env (requests will be TLS encrypted)
     REQUEST_PROTOCOL: 'http',

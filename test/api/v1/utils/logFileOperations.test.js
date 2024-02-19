@@ -9,18 +9,37 @@ const {FileDoesNotExistError} = require("../../../../src/api/errors/errorClasses
 const httpStatus = require("http-status-codes");
 
 describe('readFileInReverse', () => {
-        let createReadStreamMock;
+        let existsSyncStub, openSyncStub, statSyncStub, readSyncStub, closeSyncStub;
 
-        beforeEach(() => {
-            createReadStreamMock = sinon.stub(fs, 'createReadStream');
-            sinon.stub(fs, 'existsSync').returns(true);
+        before(function () {
+            existsSyncStub = sinon.stub(fs, 'existsSync');
+            openSyncStub = sinon.stub(fs, 'openSync');
+            statSyncStub = sinon.stub(fs, 'statSync');
+            readSyncStub = sinon.stub(fs, 'readSync');
+            closeSyncStub = sinon.stub(fs, 'closeSync');
         });
 
-        afterEach(() => {
-            sinon.restore();
+        after(function () {
+            existsSyncStub.restore();
+            openSyncStub.restore();
+            statSyncStub.restore();
+            readSyncStub.restore();
+            closeSyncStub.restore();
         });
+
+        function stubFSMethodsForMockData(mockData) {
+            const mockDataBuffer = Buffer.from(mockData);
+            existsSyncStub.returns(true);
+            statSyncStub.returns({size: mockDataBuffer.length});
+            readSyncStub.callsFake((fd, buffer, offset, length, position) => {
+                mockDataBuffer.copy(buffer, offset, 0, mockDataBuffer.length);
+                // return the number of bytes read
+                return mockDataBuffer.length;
+            });
+        }
 
         function getExpectedData(mockData, numEntries, keyword) {
+            stubFSMethodsForMockData(mockData);
             let mockDataCopy = mockData.split('\n');
 
             while (mockDataCopy.length > 0 && mockDataCopy[mockDataCopy.length - 1].trim() === '') {
@@ -46,7 +65,6 @@ describe('readFileInReverse', () => {
                     this.push(null);
                 }
             });
-            createReadStreamMock.returns(readableStream);
 
             const logsStream = await logFileOperations.readFileInReverse('filePath', numEntries, keyword);
 

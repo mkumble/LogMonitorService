@@ -2,28 +2,22 @@ const fs = require('fs');
 
 const logger = require('./logger');
 const constants = require('./constants')
-const {FileDoesNotExistError, FileStreamCreateError} = require('../errors/errorClasses');
-const {FILE_STREAM_CREATE_ERROR} = require("../errors/errorMessages");
 const LogsStreamTransform = require("../v1/transforms/LogsStreamTransform");
+const FileReader = require("./FileReader");
 
-//handles reading fileStream data, throws FileStream error if reading fails
+//handles reading fileStream data in reverse, throws FileStream error if reading fails
 function readFileInReverse(filePath, numEntries, keyword) {
     return new Promise((resolve, reject) => {
-        if (!fs.existsSync(filePath)) {
-            reject(new FileDoesNotExistError());
-            return;
-        }
-
-        let fileStream;
+        let reverseFileSream;
         try {
-            fileStream = fs.createReadStream(filePath, {encoding: constants.UTF8_ENCODING});
+            reverseFileSream = new FileReader(filePath, true, {encoding: constants.UTF8_ENCODING});
         } catch (err) {
-            logger.log(err, FILE_STREAM_CREATE_ERROR);
-            reject(new FileStreamCreateError());
+            logger.log(err, err.message);
+            reject(err);
             return;
         }
 
-        const logStream = fileStream.pipe(new LogsStreamTransform(numEntries, keyword));
+        const logStream = reverseFileSream.pipe(new LogsStreamTransform(numEntries, keyword, reverseFileSream));
         resolve(logStream);
     });
 }
