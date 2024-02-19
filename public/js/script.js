@@ -115,10 +115,10 @@ document.getElementById('logForm').addEventListener('submit', function (event) {
             fileName.textContent = `File: ${serverResponse.fileName}`;  // Access the fileName property
             logBox.appendChild(fileName);
 
-            if (serverResponse.error) {
-                // If error is an array, create a separate paragraph for each error message
-                if (Array.isArray(serverResponse.error)) {
-                    serverResponse.error.forEach(errorMsg => {
+            if (serverResponse.errors) {
+                // If errors is an array, create a separate paragraph for each error message
+                if (Array.isArray(serverResponse.errors)) {
+                    serverResponse.errors.forEach(errorMsg => {
                         const errorMessage = document.createElement('p');
                         errorMessage.textContent = `Error: ${errorMsg}`;
                         errorMessage.style.color = 'red';
@@ -126,7 +126,7 @@ document.getElementById('logForm').addEventListener('submit', function (event) {
                     });
                 } else {
                     const errorMessage = document.createElement('p');
-                    errorMessage.textContent = `Error: ${serverResponse.error}`;
+                    errorMessage.textContent = `Error: ${serverResponse.errors}`;
                     errorMessage.style.color = 'red';
                     logBox.appendChild(errorMessage);
                 }
@@ -138,5 +138,6 @@ document.getElementById('logForm').addEventListener('submit', function (event) {
 
             document.getElementById('logs').appendChild(logBox);
         }
+
     }
 });
