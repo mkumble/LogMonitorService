@@ -4,6 +4,9 @@ This service provides on-demand monitoring of various Unix-based servers without
 ## Requirements, Design & Architecture:
 Detailed information about the requirements, design, and architecture of this service can be found here: https://docs.google.com/document/d/13GyRpE5BllY1iMDoQd9ffszhTRFUfHQzeOUxAGgiXe4/edit?usp=sharing
 
+## Slides
+https://docs.google.com/presentation/d/1OCeanbiMNvIxMadFP_EQ70dWTBia9Fp5J86VLnG8ipY/edit#slide=id.p
+
 ## Implementation
 ```text
 1. logsRouter: Accepts the HTTP GET requests for the logs API Endpoints and directs to the logsValidator.
